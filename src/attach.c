@@ -29,6 +29,7 @@ char* attach_files(FILE* buffer){
 		return NULL;
 	}
 	memset(new_body,0, len + 1);
+	fseek(buffer, 0, SEEK_SET);
 	if(fread(new_body, 1, len, buffer) <= 0){
 		perror("Failed to read file buffer");
 		free(new_body);
