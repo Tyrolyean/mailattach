@@ -1,5 +1,5 @@
 /*
- * config.c - Configuration loading and data storage
+ * attach.h - Core mechanix behind attachment replacing
  * The author licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -14,7 +14,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#include "config.h"
 
-char* socket_location = "/var/run/mailattach";
+#ifndef ATTACH_H
+#define ATTACH_H
 
+#include <stdint.h>
+
+char* attach_files(const unsigned char* original_message, 
+	size_t original_length);
+
+#endif /* ATTACH_H */

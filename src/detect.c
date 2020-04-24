@@ -1,5 +1,5 @@
 /*
- * config.c - Configuration loading and data storage
+ * detect.c - Detect content
  * The author licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -14,7 +14,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#include "config.h"
 
-char* socket_location = "/var/run/mailattach";
+#include "detect.h"
+
+bool detect_pgp(const char* message){
+
+	return false;
+}
 

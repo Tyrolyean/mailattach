@@ -19,7 +19,7 @@
 
 #include "version.h"
 #include "config.h"
-#include "detect.h"
+#include "attach.h"
 
 struct mlfiPriv
 {
@@ -126,7 +126,17 @@ sfsistat mlfi_body(SMFICTX* ctx, unsigned char * bodyp, size_t bodylen) {
 		(void) mlfi_cleanup(ctx, false);
 		return SMFIS_TEMPFAIL;
 	}
-
+	char* new_body = attach_files(bodyp, bodylen);
+	if(new_body != NULL){
+		
+		size_t new_bodylen = strlen(new_body)+1;
+		unsigned char * replacement = malloc(new_bodylen+1);
+		memset(replacement, 0, new_bodylen+1);
+		memcpy(replacement, replacement, new_bodylen+1);
+		free(new_body);
+		printf("Replacing body of mail message\n");
+		smfi_replacebody(ctx, replacement, new_bodylen);
+	}
 	/* continue processing */
 	return SMFIS_CONTINUE;
 }

@@ -1,5 +1,5 @@
 /*
- * detect.h - Licensed 
+ * detect.h - Content detection
  * The author licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -20,6 +20,6 @@
 
 #include <stdbool.h>
 
-bool detect_pgp(const FILE* message);
+bool detect_pgp(const char* message);
 
 #endif /* DETECT_H */
