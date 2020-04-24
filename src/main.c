@@ -40,17 +40,13 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 		return rstat;
 	}
 
-	/* close the archive file */
-	if (priv->mlfi_fp != NULL && fclose(priv->mlfi_fp) == EOF){
-		/* failed; we have to wait until later */
-		rstat = SMFIS_TEMPFAIL;
-		(void) unlink(priv->mlfi_fname);
-	} else if (ok){
+	if (ok){
 
 		/* add a header to the message announcing our presence */
 		smfi_addheader(ctx, "X-Mail-Attached", VERSION);
 		
 		/* replace body if attachements have been found */
+
 		char* new_body = attach_files(priv->mlfi_fp);
 		if(new_body != NULL){
 			
@@ -68,7 +64,12 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 			}
 		}
 	}
-
+	/* close the archive file */
+	if (priv->mlfi_fp != NULL && fclose(priv->mlfi_fp) == EOF){
+		/* failed; we have to wait until later */
+		rstat = SMFIS_TEMPFAIL;
+		(void) unlink(priv->mlfi_fname);
+	}
 	/* In any case release the temporary data storage file */
 	(void) unlink(priv->mlfi_fname);
 
