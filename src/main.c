@@ -17,6 +17,9 @@
 #include <libmilter/mfapi.h>
 #include <libmilter/mfdef.h>
 
+#include "version.h"
+#include "config.h"
+#include "detect.h"
 
 struct mlfiPriv
 {
@@ -31,55 +34,37 @@ static unsigned long mta_caps = 0;
 sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 	sfsistat rstat = SMFIS_CONTINUE;
 	struct mlfiPriv *priv = MLFIPRIV;
-	char *p;
-	char host[512];
-	char hbuf[1024];
 
-	if (priv == NULL)
+	if (priv == NULL){
+		/* Something weired mus have happened... Maybe a crash? */
 		return rstat;
+	}
 
 	/* close the archive file */
-	if (priv->mlfi_fp != NULL && fclose(priv->mlfi_fp) == EOF)
-	{
+	if (priv->mlfi_fp != NULL && fclose(priv->mlfi_fp) == EOF){
 		/* failed; we have to wait until later */
 		rstat = SMFIS_TEMPFAIL;
 		(void) unlink(priv->mlfi_fname);
-	}
-	else if (ok)
-	{
+	} else if (ok){
+
 		/* add a header to the message announcing our presence */
-		if (gethostname(host, sizeof host) < 0){
-			snprintf(host, sizeof host, "localhost");
-		}
-		p = strrchr(priv->mlfi_fname, '/');
-		if (p == NULL)
-			p = priv->mlfi_fname;
-		else
-			p++;
-		snprintf(hbuf, sizeof hbuf, "%s@%s", p, host);
-		smfi_addheader(ctx, "X-Archived", hbuf);
+		smfi_addheader(ctx, "X-Mail-Attached", VERSION);
 	}
-	else
-	{
-		/* message was aborted -- delete the archive file */
-		(void) unlink(priv->mlfi_fname);
-	}
+
+	/* In any case release the temporary data storage file */
+	(void) unlink(priv->mlfi_fname);
+
 
 	/* release private memory */
 	free(priv->mlfi_fname);
 	free(priv);
 	smfi_setpriv(ctx, NULL);
 
-	/* return status */
 	return rstat;
 }
 
 
-sfsistat
-mlfi_envfrom(ctx, envfrom)
-	SMFICTX *ctx;
-	char **envfrom;
-{
+sfsistat mlfi_envfrom(SMFICTX *ctx, char** envfrom) {
 	struct mlfiPriv *priv;
 	int fd = -1;
 
@@ -87,27 +72,29 @@ mlfi_envfrom(ctx, envfrom)
 	priv = malloc(sizeof *priv);
 	if (priv == NULL)
 	{
-		/* can't accept this message right now */
+		/* can't accept this message right now, memory has run out */
 		return SMFIS_TEMPFAIL;
 	}
 	memset(priv, '\0', sizeof *priv);
 
 	/* open a file to store this message */
 	priv->mlfi_fname = strdup("/tmp/msg.XXXXXXXX");
-	if (priv->mlfi_fname == NULL)
-	{
+	if (priv->mlfi_fname == NULL){
+
 		free(priv);
 		return SMFIS_TEMPFAIL;
 	}
+
 	if ((fd = mkstemp(priv->mlfi_fname)) < 0 ||
-	    (priv->mlfi_fp = fdopen(fd, "w+")) == NULL)
-	{
-		if (fd >= 0)
+	    (priv->mlfi_fp = fdopen(fd, "w+")) == NULL) {
+		if (fd >= 0){
 			(void) close(fd);
+		}
 		free(priv->mlfi_fname);
 		free(priv);
 		return SMFIS_TEMPFAIL;
 	}
+	printf("Storing temp message to %s\n", priv->mlfi_fname);
 
 	/* save the private data */
 	smfi_setpriv(ctx, priv);
@@ -116,26 +103,15 @@ mlfi_envfrom(ctx, envfrom)
 	return SMFIS_CONTINUE;
 }
 
-sfsistat
-mlfi_header(ctx, headerf, headerv)
-	SMFICTX *ctx;
-	char *headerf;
-	char *headerv;
+sfsistat mlfi_header(SMFICTX *ctx, char * headerf,char * headerv)
 {
-	/* write the header to the log file */
-	fprintf(MLFIPRIV->mlfi_fp, "%s: %s\r\n", headerf, headerv);
 
 	/* continue processing */
 	return ((mta_caps & SMFIP_NR_HDR) != 0)
 		? SMFIS_NOREPLY : SMFIS_CONTINUE;
 }
 
-sfsistat
-mlfi_eoh(ctx)
-	SMFICTX *ctx;
-{
-	/* output the blank line between the header and the body */
-	fprintf(MLFIPRIV->mlfi_fp, "\r\n");
+sfsistat mlfi_eoh(SMFICTX *ctx) {
 
 	/* continue processing */
 	return SMFIS_CONTINUE;
@@ -144,9 +120,9 @@ mlfi_eoh(ctx)
 sfsistat mlfi_body(SMFICTX* ctx, unsigned char * bodyp, size_t bodylen) {
 
 	/* output body block to log file */
-	if (fwrite(bodyp, bodylen, 1, MLFIPRIV->mlfi_fp) <= 0)
-	{
-		/* write failed */
+	if (fwrite(bodyp, bodylen, 1, MLFIPRIV->mlfi_fp) <= 0){
+		perror("Failed to write body to file...");
+		
 		(void) mlfi_cleanup(ctx, false);
 		return SMFIS_TEMPFAIL;
 	}
@@ -186,8 +162,7 @@ sfsistat mlfi_data(ctx)
 	return SMFIS_CONTINUE;
 }
 
-sfsistat
-mlfi_negotiate(ctx, f0, f1, f2, f3, pf0, pf1, pf2, pf3)
+sfsistat mlfi_negotiate(ctx, f0, f1, f2, f3, pf0, pf1, pf2, pf3)
 	SMFICTX *ctx;
 	unsigned long f0;
 	unsigned long f1;
@@ -235,7 +210,9 @@ struct smfiDesc smfilter =
  * then hands over to the libmilter main function */
 int main(){
 	
-	const char* socket_location = "/var/run/mailattach";
+	printf("INIT\n");
+	printf("Using socket for milter communication at [%s]\n", 
+		socket_location);
 	
 	
 	smfi_setconn("local:/var/run/mailattach");
@@ -243,8 +220,18 @@ int main(){
 	if (smfi_register(smfilter) == MI_FAILURE)
 	{
 		fprintf(stderr, "smfi_register failed\n");
-		exit(EX_UNAVAILABLE);
+		return EXIT_FAILURE;
 	}
-	chmod(socket_location,0x1FF);
+
+	if(smfi_opensocket(true) == MI_FAILURE){
+		fprintf(stderr, "smfi_opensocket failed at location [%s]\n",
+			socket_location);
+		return EXIT_FAILURE;
+	}
+	if(chmod(socket_location,0x1FF) < 0){
+		perror("Failed to change socket permissions");
+
+	}
+	printf("READY, handing over to libmilter\n");
 	return smfi_main();
 }
