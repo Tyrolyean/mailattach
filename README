@@ -1,0 +1,5 @@
+MAILATTACH
+
+This program starts a process which listens on a unix socket for incoming
+milter connections. Incoming mail is scanned for large files and files above a
+certain threshold are replaced with links which the user may specify.
