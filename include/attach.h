@@ -19,8 +19,8 @@
 #define ATTACH_H
 
 #include <stdint.h>
+#include <stdio.h>
 
-char* attach_files(const unsigned char* original_message, 
-	size_t original_length);
+char* attach_files(FILE* buffer);
 
 #endif /* ATTACH_H */

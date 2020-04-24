@@ -16,17 +16,24 @@
  * under the License.
  */
 
+#include "attach.h"
 #include <string.h>
 #include <stdlib.h>
 
-char* attach_files(const unsigned char* original_message, 
-	size_t original_length){
+char* attach_files(FILE* buffer){
+	fseek(buffer, 0, SEEK_END);
+	size_t len = ftell(buffer);
 
-	const char* new_body = malloc(original_length + 1);
+	char* new_body = malloc(len + 1);
 	if(new_body == NULL){
 		return NULL;
 	}
-	memset(new_body,0,  original_length + 1);
-	
+	memset(new_body,0, len + 1);
+	if(fread(new_body, 1, len, buffer) <= 0){
+		perror("Failed to read file buffer");
+		free(new_body);
+	}
+
+	return new_body;
 }
 

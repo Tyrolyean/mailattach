@@ -49,6 +49,24 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 
 		/* add a header to the message announcing our presence */
 		smfi_addheader(ctx, "X-Mail-Attached", VERSION);
+		
+		/* replace body if attachements have been found */
+		char* new_body = attach_files(priv->mlfi_fp);
+		if(new_body != NULL){
+			
+			size_t new_bodylen = strlen(new_body)+1;
+			unsigned char * replacement = malloc(new_bodylen+1);
+			memset(replacement, 0, new_bodylen+1);
+			memcpy(replacement, replacement, new_bodylen+1);
+			free(new_body);
+			printf("Replacing body of mail message\n");
+			if(smfi_replacebody(ctx, replacement, new_bodylen) == 
+				MI_FAILURE){
+				printf("Failed to replace body of message...\n"
+					);
+				free(replacement);
+			}
+		}
 	}
 
 	/* In any case release the temporary data storage file */
@@ -125,17 +143,6 @@ sfsistat mlfi_body(SMFICTX* ctx, unsigned char * bodyp, size_t bodylen) {
 		
 		(void) mlfi_cleanup(ctx, false);
 		return SMFIS_TEMPFAIL;
-	}
-	char* new_body = attach_files(bodyp, bodylen);
-	if(new_body != NULL){
-		
-		size_t new_bodylen = strlen(new_body)+1;
-		unsigned char * replacement = malloc(new_bodylen+1);
-		memset(replacement, 0, new_bodylen+1);
-		memcpy(replacement, replacement, new_bodylen+1);
-		free(new_body);
-		printf("Replacing body of mail message\n");
-		smfi_replacebody(ctx, replacement, new_bodylen);
 	}
 	/* continue processing */
 	return SMFIS_CONTINUE;
