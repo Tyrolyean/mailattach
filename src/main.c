@@ -211,7 +211,7 @@ struct smfiDesc smfilter =
 {
 	"mailattach",	/* filter name */
 	SMFI_VERSION,	/* version code -- do not change */
-	SMFIF_ADDHDRS|SMFIF_CHGFROM|SMFIF_ADDRCPT|SMFIF_DELRCPT|SMFIF_CHGBODY,	/* flags */
+	SMFIF_ADDHDRS|SMFIF_CHGFROM|SMFIF_ADDRCPT|SMFIF_DELRCPT|0b01|SMFIF_NONE,	/* flags */
 	NULL,		/* connection info filter */
 	NULL,		/* SMTP HELO command filter */
 	mlfi_envfrom,	/* envelope sender filter */
