@@ -226,6 +226,16 @@ int main(){
 		fprintf(stderr, "smfi_register failed\n");
 		return EXIT_FAILURE;
 	}
+	
+	if(smfi_opensocket(true) == MI_FAILURE){
+		fprintf(stderr, "smfi_opensocket failed at location [%s]\n",
+			socket_location);
+		return EXIT_FAILURE;
+	}
+	if(chmod(socket_location,0x1FF) < 0){
+		perror("Failed to change socket permissions");
+
+	}
 
 	printf("READY, handing over to libmilter\n");
 	return smfi_main();
