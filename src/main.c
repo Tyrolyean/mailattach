@@ -33,7 +33,7 @@ static unsigned long mta_caps = 0;
 sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 	sfsistat rstat = SMFIS_CONTINUE;
 	struct mlfiPriv *priv = MLFIPRIV;
-
+	
 	if (priv == NULL){
 		/* Something weired mus have happened... Maybe a crash? */
 		return rstat;
@@ -52,13 +52,14 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 			size_t new_bodylen = strlen(new_body)+10;
 			unsigned char * replacement = malloc(new_bodylen+1);
 			memset(replacement, 0, new_bodylen+1);
-			strcat(replacement, head);
-			strcat(replacement, new_body);
+			strcat((char*)replacement, head);
+			strcat((char*)replacement, new_body);
 			free(new_body);
 			printf("Replacing body of mail message with len %lu\n", 
-                                  strlen(replacement));
+                                  strlen((char*)replacement));
 			printf("Content: [%s]\n",replacement);
-			if(smfi_replacebody(ctx, replacement, strlen(replacement)) == 
+			if(smfi_replacebody(ctx, replacement, 
+				strlen((char*)replacement)) == 
 				MI_FAILURE){
 				printf("Failed to replace body of message...\n"
 					);
@@ -86,8 +87,10 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 }
 
 
-sfsistat mlfi_envfrom(SMFICTX *ctx, char** envfrom) {
-	struct mlfiPriv *priv;
+sfsistat mlfi_envfrom(__attribute__((unused)) SMFICTX *ctx,
+	 __attribute__((unused)) char** envfrom) {
+
+struct mlfiPriv *priv;
 	int fd = -1;
 
 	/* allocate some private memory */
@@ -125,19 +128,15 @@ sfsistat mlfi_envfrom(SMFICTX *ctx, char** envfrom) {
 	return SMFIS_CONTINUE;
 }
 
-sfsistat mlfi_header(SMFICTX *ctx, char * headerf,char * headerv)
-{
+sfsistat mlfi_header(__attribute__((unused)) SMFICTX *ctx, 
+	__attribute__((unused)) char * headerf, 
+	__attribute__((unused))char * headerv){
 
 	/* continue processing */
 	return ((mta_caps & SMFIP_NR_HDR) != 0)
 		? SMFIS_NOREPLY : SMFIS_CONTINUE;
 }
 
-sfsistat mlfi_eoh(SMFICTX *ctx) {
-
-	/* continue processing */
-	return SMFIS_CONTINUE;
-}
 
 sfsistat mlfi_body(SMFICTX* ctx, unsigned char * bodyp, size_t bodylen) {
 
@@ -158,41 +157,17 @@ sfsistat mlfi_eom(ctx)
 	return mlfi_cleanup(ctx, true);
 }
 
-sfsistat mlfi_close(ctx)
-	SMFICTX *ctx;
-{
-	return SMFIS_ACCEPT;
-}
-
 sfsistat mlfi_abort(ctx)
 	SMFICTX *ctx;
 {
 	return mlfi_cleanup(ctx, false);
 }
 
-sfsistat mlfi_unknown(ctx, cmd)
-	SMFICTX *ctx;
-	char *cmd;
-{
-	return SMFIS_CONTINUE;
-}
-
-sfsistat mlfi_data(ctx)
-	SMFICTX *ctx;
-{
-	return SMFIS_CONTINUE;
-}
-
-sfsistat mlfi_negotiate(ctx, f0, f1, f2, f3, pf0, pf1, pf2, pf3)
-	SMFICTX *ctx;
-	unsigned long f0;
-	unsigned long f1;
-	unsigned long f2;
-	unsigned long f3;
-	unsigned long *pf0;
-	unsigned long *pf1;
-	unsigned long *pf2;
-	unsigned long *pf3;
+sfsistat mlfi_negotiate(__attribute__((unused)) SMFICTX* ctx, 
+	__attribute__((unused)) unsigned long f0, unsigned long f1, 
+	__attribute__((unused)) unsigned long f2, 
+	__attribute__((unused)) unsigned long f3, unsigned long* pf0, 
+	unsigned long*  pf1, unsigned long* pf2, unsigned long* pf3)
 {
 	/* milter actions: add headers */
 	*pf0 = SMFIF_ADDHDRS;
@@ -217,13 +192,13 @@ struct smfiDesc smfilter =
 	mlfi_envfrom,	/* envelope sender filter */
 	NULL,		/* envelope recipient filter */
 	mlfi_header,	/* header filter */
-	mlfi_eoh,	/* end of header */
+	NULL,		/* end of header */
 	mlfi_body,	/* body block filter */
 	mlfi_eom,	/* end of message */
 	mlfi_abort,	/* message aborted */
-	mlfi_close,	/* connection cleanup */
-	mlfi_unknown,	/* unknown/unimplemented SMTP commands */
-	mlfi_data,	/* DATA command filter */
+	NULL,		/* connection cleanup */
+	NULL,		/* unknown/unimplemented SMTP commands */
+	NULL,		/* DATA command filter */
 	mlfi_negotiate	/* option negotiation at connection startup */
 };
 
@@ -252,15 +227,6 @@ int main(){
 		return EXIT_FAILURE;
 	}
 
-	if(smfi_opensocket(true) == MI_FAILURE){
-		fprintf(stderr, "smfi_opensocket failed at location [%s]\n",
-			socket_location);
-		return EXIT_FAILURE;
-	}
-	if(chmod(socket_location,0x1FF) < 0){
-		perror("Failed to change socket permissions");
-
-	}
 	printf("READY, handing over to libmilter\n");
 	return smfi_main();
 }
