@@ -18,4 +18,10 @@
 
 #define VERSION "0.1"
 
+#ifndef bool
+# define bool	int
+# define TRUE	1
+# define FALSE	0
+#endif /* ! bool */
+
 #endif /* LICENSE_H */

@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sysexits.h>
 #include <unistd.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 
 #include <libmilter/mfapi.h>
@@ -49,20 +48,24 @@ sfsistat mlfi_cleanup(SMFICTX* ctx, bool ok) {
 
 		char* new_body = attach_files(priv->mlfi_fp);
 		if(new_body != NULL){
-			
-			size_t new_bodylen = strlen(new_body)+1;
+			const char* head = "REPLACED:";
+			size_t new_bodylen = strlen(new_body)+10;
 			unsigned char * replacement = malloc(new_bodylen+1);
 			memset(replacement, 0, new_bodylen+1);
-			memcpy(replacement, replacement, new_bodylen+1);
+			strcat(replacement, head);
+			strcat(replacement, new_body);
 			free(new_body);
-			printf("Replacing body of mail message\n");
-			if(smfi_replacebody(ctx, replacement, new_bodylen) == 
+			printf("Replacing body of mail message with len %lu\n", 
+                                  strlen(replacement));
+			printf("Content: [%s]\n",replacement);
+			if(smfi_replacebody(ctx, replacement, strlen(replacement)) == 
 				MI_FAILURE){
 				printf("Failed to replace body of message...\n"
 					);
 				free(replacement);
 			}
 		}
+		
 	}
 	/* close the archive file */
 	if (priv->mlfi_fp != NULL && fclose(priv->mlfi_fp) == EOF){
@@ -208,7 +211,7 @@ struct smfiDesc smfilter =
 {
 	"mailattach",	/* filter name */
 	SMFI_VERSION,	/* version code -- do not change */
-	SMFIF_ADDHDRS | SMFIF_CHGBODY,	/* flags */
+	SMFIF_ADDHDRS|SMFIF_CHGFROM|SMFIF_ADDRCPT|SMFIF_DELRCPT|SMFIF_CHGBODY,	/* flags */
 	NULL,		/* connection info filter */
 	NULL,		/* SMTP HELO command filter */
 	mlfi_envfrom,	/* envelope sender filter */
@@ -229,11 +232,19 @@ struct smfiDesc smfilter =
 int main(){
 	
 	printf("INIT\n");
+	
+	const char* conn_prefix = "local:";
+	size_t conn_len = strlen(socket_location)+strlen(conn_prefix)+1;
+	char * conn_str = malloc(conn_len);
+	memset(conn_str, 0, conn_len);
+
+	strcat(conn_str, conn_prefix);
+	strcat(conn_str, socket_location);
+	
 	printf("Using socket for milter communication at [%s]\n", 
-		socket_location);
+		conn_str);
 	
-	
-	smfi_setconn("local:/var/run/mailattach");
+	smfi_setconn(conn_str);
 
 	if (smfi_register(smfilter) == MI_FAILURE)
 	{
