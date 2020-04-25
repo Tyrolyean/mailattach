@@ -26,7 +26,10 @@ int main(int argc, char* argv[]){
 	for(size_t i = 0; i < argc; i++){
 		fprintf(logfile, "\t%lu:%s\n",i, argv[i]);
 	}
-
+	char input[1024];
+	fread(input, sizeof(input), 1, stdin);
+	fprintf(logfile, input);
+	
 	fclose(logfile);
 
 
