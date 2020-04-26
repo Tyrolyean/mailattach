@@ -33,7 +33,7 @@ $(DIRS_TARGET):
 	$(MKDIR_P) $@
 
 $(TARGET): $(OBJFILES)
-	$(CC) $(LDFLAGS) -o $@  $^ /usr/lib/libmilter.a
+	$(CC) $(LDFLAGS) -o $@  $^ 
  
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<

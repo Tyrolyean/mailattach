@@ -17,6 +17,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-extern char* socket_location;
+#include <stdint.h>
+
+extern uint16_t listen_port, forward_port;
 
 #endif /* CONFIG_H */

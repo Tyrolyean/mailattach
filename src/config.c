@@ -16,5 +16,4 @@
  */
 #include "config.h"
 
-char* socket_location = "/var/run/mailattach";
-
+uint16_t listen_port = 4269, forward_port = 4270;
