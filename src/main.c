@@ -89,10 +89,11 @@ void* client_handle_async(void* params){
 
 			}
 			bzero(buf, sizeof(buf));
-			n = read(fds[i].fd, buf, sizeof(buf));
+			n = read(fds[i].fd, buf, sizeof(buf)-1);
 			if (n <= 0) {
 				goto closeup;
 			}
+			printf("%lu:[%s]", i, buf);
 			
 
 			if(i==0 && !in_body){
@@ -119,7 +120,7 @@ void* client_handle_async(void* params){
 
 				}
 			} else if(i==0 && !after_body){
-				/* We keep the body until we have it completetly
+				/* We keep the body until we have it completely
 				 */
 				in_len += n;
 				input_buffer = realloc(input_buffer, in_len);
