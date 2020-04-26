@@ -19,7 +19,9 @@
 #define DETECT_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 bool detect_pgp(const char* message);
-
+char* detect_start_of_body(char* message);
+char* detect_end_of_body(char* message);
 #endif /* DETECT_H */

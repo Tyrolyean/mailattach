@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sysexits.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -24,6 +25,7 @@
 #include "version.h"
 #include "config.h"
 #include "attach.h"
+#include "detect.h"
 
 /*
  * error - wrapper for perror
@@ -63,7 +65,7 @@ void* client_handle_async(void* params){
 	}
 
 	int n; /* message byte size */
-	char buf[1024];
+	char buf[10];
 	struct pollfd fds[2];
 	memset(fds, 0 , sizeof(fds));
 	fds[0].fd = cli->fd;
@@ -72,6 +74,13 @@ void* client_handle_async(void* params){
 	fds[1].events = POLLIN;
 	
 	int timeout = (10 * 1000); /* 10 seconds */
+
+	char * input_buffer = malloc(1);
+	input_buffer[0]=0;
+	size_t in_len = 1;
+	bool in_body = false, after_body = false;
+	char* body_p = NULL;
+	size_t body_offs = 0;
 
 	while(poll(fds, 2, timeout) > 0){
 		for(size_t i = 0; i < 2; i++){
@@ -84,18 +93,75 @@ void* client_handle_async(void* params){
 			if (n <= 0) {
 				goto closeup;
 			}
-			printf("%lu: %s\n", i, buf);
-			write((fds[!i].fd), buf, n);
+			
+
+			if(i==0 && !in_body){
+				/* As long as we are outside the real mail body 
+				 * we can basically passthrough the commands 
+				 */
+				in_len += n;
+				input_buffer = realloc(input_buffer, in_len);
+				strncat(input_buffer,buf, n);
+				body_p = detect_start_of_body(input_buffer);
+				if(body_p != NULL){
+					/* We reached the beginning of the body
+					 * now! */
+					body_offs = body_p - input_buffer;
+					in_body = true;
+					write((fds[!i].fd), 
+						input_buffer+(in_len-n), 
+						body_offs-(in_len-n));
+					printf("Beginning of body found! "
+						"Awaiting end...\n");
+					
+				}else{
+					write((fds[!i].fd), buf, n);
+
+				}
+			} else if(i==0 && !after_body){
+				/* We keep the body until we have it completetly
+				 */
+				in_len += n;
+				input_buffer = realloc(input_buffer, in_len);
+				strncat(input_buffer,buf, n);
+				body_p = detect_end_of_body(input_buffer+ 
+					body_offs);
+
+				if(body_p != NULL){
+					
+					printf("We found the body:\n%.*s\n",
+						body_p-(input_buffer+body_offs),
+						input_buffer+body_offs);
+
+					size_t body_len = body_p-
+						(input_buffer+body_offs);
+
+					write((fds[!i].fd), 
+						input_buffer+body_offs, 
+						body_len);
+					write((fds[!i].fd), 
+						input_buffer+body_offs+body_len, 
+						in_len-(body_offs+body_len));
+
+					after_body = true;
+					
+				}
+				
+			}else{
+				write((fds[!i].fd), buf, n);
+
+			}
 			
 		}
 	}
 
 closeup:
 
-	printf("Disconnecting clients");
+	printf("Disconnecting clients\n");
 	close(cli->fd);
 	close(remote_fd);
 	free(cli);
+	free(input_buffer);
 	
 	return NULL;
 }
