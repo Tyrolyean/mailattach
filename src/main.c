@@ -107,7 +107,7 @@ void receive_mail(struct mail_recv_t* rec){
 				rec->input_buffer+rec->body_offs, body_len);
 			rec->input_buffer = realloc(rec->input_buffer, 
 				body_len + 1);
-			rec->input_buffer[body_len+1] = 0;
+			rec->input_buffer[body_len] = 0;
 			rec->in_len = body_len;
 
 			char* new_body = attach_files(
