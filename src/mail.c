@@ -17,6 +17,7 @@
 
 #include "mail.h"
 #include "tools.h"
+#include "attach.h"
 
 #include <string.h>
 #include <stddef.h>
@@ -67,9 +68,10 @@ int append_to_header(struct email_t* mail, const char* pair){
 	buffer[1] = '\n';
 	strcat(buffer, pair);
 
-	mail->message=insert_string(mail->message, buffer, strlen(buffer), 
+	mail->message=insert_string(mail->message, buffer, mail->message_length, 
 		mail->header_len);
 	free(buffer);
+	redetect_body_head(mail);
 
 	return 0;
 
