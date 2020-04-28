@@ -78,7 +78,7 @@ char* attach_files(char* message, size_t len){
 	
 	printf("Received message header: [%.*s]\n", email.header_len, 
 		email.message);
-	printf("Received message body: [%s]\n", 
+	printf("Received message body: [%.*s]\n", 
 		email.message + email.body_offset);
 
 	/* Now we have a null terminated body which we can edit! */

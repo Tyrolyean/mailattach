@@ -40,6 +40,82 @@ struct client_info {
 	int fd;
 };
 
+void receive_mail(char** input_buffer, size_t *in_len, bool *in_body, 
+	bool *after_body, char** body_p, size_t *body_offs, struct pollfd fds[2],
+	char *buf, int n){
+	
+	if(!*in_body){
+		/* As long as we are outside the real mail body 
+		 * we can basically passthrough the commands 
+		 */
+		*in_len += n;
+		*input_buffer = realloc(*input_buffer, *in_len);
+		strncat(*input_buffer,buf, n);
+		*body_p = detect_start_of_body(*input_buffer);
+		if(*body_p != NULL){
+			/* We reached the beginning of the body
+			 * now! */
+			*body_offs = body_p - input_buffer;
+			*in_body = true;
+			write((fds[1].fd), 
+				*input_buffer+(*in_len-n), 
+				*body_offs-(*in_len-n));
+			printf("Beginning of message found! "
+				"Awaiting end...\n");
+			
+		}else{
+			write((fds[1].fd), buf, n);
+
+		}
+	} else if(!*after_body){
+		/* We keep the body until we have it completely
+		 */
+		*in_len += n;
+		*input_buffer = realloc(*input_buffer, *in_len);
+		strncat(*input_buffer, buf, n);
+		*body_p = detect_end_of_body(*input_buffer+ 
+			*body_offs);
+
+		if(*body_p != NULL){
+			
+			printf("Data found, interpreting...\n");
+			size_t body_len = *body_p-
+				(*input_buffer+*body_offs);
+			
+			char* new_body = attach_files(
+				*input_buffer+*body_offs, 
+				body_len);
+			
+			if(new_body != NULL){
+				/* Write the replacement */
+				write((fds[1].fd), new_body, 
+					strlen(new_body));
+				free(new_body);
+			}else{
+				/* Write the original */
+				write((fds[1].fd), 
+					*input_buffer+*body_offs, 
+					body_len);
+				
+			}
+
+			/* Rest of conversation after message */
+
+			write((fds[1].fd), 
+				*input_buffer+*body_offs+body_len, 
+				*in_len-(*body_offs+body_len));
+
+			*after_body = true;
+			
+		}
+	}else{
+		write((fds[1].fd), buf, n);
+
+	}
+	return;
+	
+}
+
 void* client_handle_async(void* params){
 	
 	struct client_info * cli = params;
@@ -96,70 +172,11 @@ void* client_handle_async(void* params){
 				goto closeup;
 			}
 
-			if(i==0 && !in_body){
-				/* As long as we are outside the real mail body 
-				 * we can basically passthrough the commands 
-				 */
-				in_len += n;
-				input_buffer = realloc(input_buffer, in_len);
-				strncat(input_buffer,buf, n);
-				body_p = detect_start_of_body(input_buffer);
-				if(body_p != NULL){
-					/* We reached the beginning of the body
-					 * now! */
-					body_offs = body_p - input_buffer;
-					in_body = true;
-					write((fds[!i].fd), 
-						input_buffer+(in_len-n), 
-						body_offs-(in_len-n));
-					printf("Beginning of message found! "
-						"Awaiting end...\n");
-					
-				}else{
-					write((fds[!i].fd), buf, n);
-
-				}
-			} else if(i==0 && !after_body){
-				/* We keep the body until we have it completely
-				 */
-				in_len += n;
-				input_buffer = realloc(input_buffer, in_len);
-				strncat(input_buffer, buf, n);
-				body_p = detect_end_of_body(input_buffer+ 
-					body_offs);
-
-				if(body_p != NULL){
-					
-					printf("Data found, interpreting...\n");
-					size_t body_len = body_p-
-						(input_buffer+body_offs);
-					
-					char* new_body = attach_files(
-						input_buffer+body_offs, 
-						body_len);
-					
-					if(new_body != NULL){
-						/* Write the replacement */
-						write((fds[!i].fd), new_body, 
-							strlen(new_body));
-						free(new_body);
-					}else{
-						/* Write the original */
-						write((fds[!i].fd), 
-							input_buffer+body_offs, 
-							body_len);
-						
-					}
-
-					/* Rest of conversation after message */
-
-					write((fds[!i].fd), 
-						input_buffer+body_offs+body_len, 
-						in_len-(body_offs+body_len));
-
-					after_body = true;
-					
-				}
+			if(i == 0){
+				receive_mail(&input_buffer, 
+					&in_len, &in_body, &after_body,
+					&body_p, &body_offs, 
+					fds, buf, n);
 				
 			}else{
 				write((fds[!i].fd), buf, n);
