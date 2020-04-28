@@ -273,9 +273,6 @@ void loop_clients(){
 	
 	while (1) {
 
-		/*
-		* accept: wait for a connection request
-		*/
 		childfd = accept(parentfd, (struct sockaddr *) &clientaddr, &clientlen);
 		if (childfd < 0){
 			perror("accept failed");

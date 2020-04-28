@@ -1,5 +1,37 @@
 MAILATTACH
 
-This program starts a process which listens on a unix socket for incoming
-milter connections. Incoming mail is scanned for large files and files above a
-certain threshold are replaced with links which the user may specify.
+This program starts a process which listens on the LOOPBACKv4 address for
+incoming connections from postfix. The postfix master should view this as an
+advanced filter as explained in their documentation for post queue filtering:
+
+http://www.postfix.org/FILTER_README.html
+
+The original attempt was to implement this as a pre queue filter, but this
+required the milter protocol and postfix currently does not implement the
+replace body function from libmilter.
+
+You can specify the following command line options:
+
+--abort-pgp --noabort-pgp
+	To either abort the attachment process if PGP encryption or signatures 
+	have been detected or not. If true, the mail will not be modified.
+
+--abort-dkim --noabort-dkim
+	To either abort the attachment process if DKIM signatures have been
+	detected or not. If true, the mail will not be modified.
+
+--in-port -i
+	The incoming smtp port/the port from which mail is received.
+
+--out-port -o
+	The outgoing smtp port/the port to which mail ist passed through.
+
+HOWTO
+
+We essentially are MITM sniffing your email traffic and playing proxy from your
+postfix to your postfix. That's how this is intended to work according to the
+postfix website.
+
+This program needs to be started via it's own systemd service on system boot.
+You need to add the in and oputput ports to your postfix queue as described in
+the link above. More documentation is to a TODO

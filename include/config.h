@@ -22,6 +22,8 @@
 
 extern uint16_t listen_port, forward_port;
 
-extern bool abort_on_pgp, abort_on_dkim;
+/* Used as booleans, but integers for getops sake... */
+
+extern int abort_on_pgp, abort_on_dkim;
 
 #endif /* CONFIG_H */
