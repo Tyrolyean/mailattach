@@ -17,6 +17,9 @@
  */
 
 #include "attach.h"
+#include "detect.h"
+#include "config.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -59,7 +62,7 @@ void redetect_body_head(struct email_t* mail){
 	 */
 
 	if(body_start == NULL) {
-		fprintf(stderr, "Received message without header!");
+		fprintf(stderr, "Received message without header!\n");
 		mail->header_len = 0;
 		mail->body_offset = 0;
 		return;
@@ -72,6 +75,10 @@ void redetect_body_head(struct email_t* mail){
 	
 }
 
+/* Message is required to be a null terminated string, length is the mail body.
+ * One may leave something behind the body. len is without the '\0'
+ * Attempts to replace files inside the email with links to it on a webserver
+ */
 char* attach_files(char* message, size_t len){
 
 	struct email_t email = mail_from_text(message,len);
@@ -82,7 +89,11 @@ char* attach_files(char* message, size_t len){
 		email.message_length-email.body_offset,
 		email.message + email.body_offset);
 
-	/* Now we have a null terminated body which we can edit! */
+	/* Check if mails are signed/encrypted, and abort if nescessary */
+	if(abort_on_pgp && detect_pgp(&email)){
+		printf("PGP detected, aborting...");
+		return email.message;
+	}
 
 	return email.message;
 }

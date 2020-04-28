@@ -18,7 +18,10 @@
 #define CONFIG_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 extern uint16_t listen_port, forward_port;
+
+extern bool abort_on_pgp, abort_on_dkim;
 
 #endif /* CONFIG_H */

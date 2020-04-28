@@ -15,14 +15,34 @@
  * under the License.
  */
 
-#include "detect.h"
 #include <stddef.h>
 #define _GNU_SOURCE
 #include <string.h>
 
-bool detect_pgp(const char* message){
+#include "detect.h"
 
-	return false;
+char* pgp_signatures[] = 
+{
+	"application/pgp-encrypted",
+	"application/pgp-signature",
+	"-----BEGIN PGP SIGNATURE-----",
+	"-----BEGIN PGP MESSAGE-----"
+};
+
+bool detect_pgp(struct email_t* mail){
+		
+	size_t points = 0;
+	
+	for(size_t i = 0; i < (sizeof(pgp_signatures)/sizeof(char*));i++){
+		if(strcasestr(mail->message,
+			pgp_signatures[i]) != NULL){
+			points++;
+		}
+		
+	}
+	
+
+	return points >= 2;
 }
 
 /* If body hasn't started yet, it returns NULL, if it has started, it returns

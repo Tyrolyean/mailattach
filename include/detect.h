@@ -20,8 +20,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "attach.h"
 
-bool detect_pgp(const char* message);
+bool detect_pgp(struct email_t* mail);
 char* detect_start_of_body(char* message);
 char* detect_end_of_body(char* message);
 #endif /* DETECT_H */
