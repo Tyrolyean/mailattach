@@ -111,8 +111,8 @@ void receive_mail(struct mail_recv_t* rec){
 			rec->in_len = body_len;
 
 			char* new_body = attach_files(
-				rec->input_buffer+rec->body_offs, 
-				body_len);
+				rec->input_buffer, 
+				rec->in_len);
 			
 			if(new_body != NULL){
 				/* Write the replacement */
