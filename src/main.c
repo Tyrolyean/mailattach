@@ -134,6 +134,7 @@ void receive_mail(struct mail_recv_t* rec){
 			write((rec->fds[1].fd), 
 				abody, 
 				abody_len);
+			free(abody);
 
 			rec->after_body = true;
 			
