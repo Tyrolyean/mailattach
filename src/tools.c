@@ -39,7 +39,8 @@ char* insert_string(char * destination, const char* source,
 		/* Out of memory... Failed me.. */
 		return NULL;
 	}
-	memmove(result+offset+src_len, result+offset, dest_orig_len - offset);
+	memmove(result+offset+src_len, result+offset, 
+		(dest_orig_len - offset+1));
 	memcpy(result+offset, source, src_len);
 	return result;
 	
