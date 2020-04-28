@@ -29,6 +29,11 @@ char* pgp_signatures[] =
 	"-----BEGIN PGP MESSAGE-----"
 };
 
+char* dkim_signatures[] = 
+{
+	"DKIM-Signature:"
+};
+
 bool detect_pgp(struct email_t* mail){
 		
 	size_t points = 0;
@@ -43,6 +48,23 @@ bool detect_pgp(struct email_t* mail){
 	
 
 	return points >= 2;
+}
+
+bool detect_dkim(struct email_t* mail){
+		
+	size_t points = 0;
+	
+	for(size_t i = 0; i < (sizeof(dkim_signatures)/sizeof(char*));i++){
+		if(strcasestr(mail->message, dkim_signatures[i]) != NULL
+				&& strcasestr(mail->message, dkim_signatures[i])
+				<= (mail->message+mail->header_len)){
+			points++;
+		}
+		
+	}
+	
+
+	return points >= 1;
 }
 
 /* If body hasn't started yet, it returns NULL, if it has started, it returns

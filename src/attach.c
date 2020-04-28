@@ -83,15 +83,14 @@ char* attach_files(char* message, size_t len){
 
 	struct email_t email = mail_from_text(message,len);
 	
-	printf("Received message header: [%.*s]\n", email.header_len, 
-		email.message);
-	printf("Received message body: [%.*s]\n", 
-		email.message_length-email.body_offset,
-		email.message + email.body_offset);
-
 	/* Check if mails are signed/encrypted, and abort if nescessary */
 	if(abort_on_pgp && detect_pgp(&email)){
 		printf("PGP detected, aborting...");
+		return email.message;
+	}
+	/* Check if mails are signed/encrypted, and abort if nescessary */
+	if(abort_on_dkim && detect_dkim(&email)){
+		printf("DKIM signature detected, aborting...");
 		return email.message;
 	}
 

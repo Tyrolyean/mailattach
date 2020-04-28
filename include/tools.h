@@ -23,4 +23,5 @@
 const char* insert_string(char * destination, const char* source, 
 	size_t dest_orig_len, size_t offset);
 
+
 #endif /* TOOLS_H */
