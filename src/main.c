@@ -119,6 +119,8 @@ void receive_mail(struct mail_recv_t* rec){
 				write((rec->fds[1].fd), new_body, 
 					strlen(new_body));
 				free(new_body);
+				rec->input_buffer = NULL;
+				rec->in_len = 0;
 			}else{
 				/* Write the original */
 				write((rec->fds[1].fd), 
