@@ -14,7 +14,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 #include "config.h"
+
+#include <stddef.h>
 
 uint16_t listen_port = 4269, forward_port = 4270;
 int abort_on_pgp = true, abort_on_dkim = true;
+char* instance_id = NULL;

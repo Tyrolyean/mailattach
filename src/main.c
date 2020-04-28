@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
+#include <unistd.h>
+#include <limits.h>
 
 #include "network.h"
 #include "config.h"
@@ -27,12 +30,13 @@ int main(int argc, char* argv[]){
 			{"noabort-dkim",no_argument, &abort_on_dkim,0},
 			{"in-port",	required_argument, 0, 'i'},
 			{"out-port",	required_argument, 0, 'o'},
+			{"instance-id",	required_argument, 0, 'n'},
 			{0, 0, 0, 0}
 		};
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long (argc, argv, "i:o:pd",
+		c = getopt_long (argc, argv, "n:i:o:pd",
 			       long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -50,6 +54,10 @@ int main(int argc, char* argv[]){
 		case 'o':
 			forward_port = atoi(optarg);
 			break;
+			
+		case 'n':
+			instance_id = optarg;
+			break;
 
 		case '?':
 			/* getopt_long already printed an error message. */
@@ -61,6 +69,17 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	/* If not already specified, populate the instance ID with the sytem 
+	 * hostname.
+	 */
+	if(instance_id == NULL){
+		instance_id = malloc(HOST_NAME_MAX + 1);
+		memset(instance_id, 0, HOST_NAME_MAX + 1);
+		if(gethostname(instance_id, HOST_NAME_MAX) < 0){
+			perror("gethostname failed! set instance id manually");
+		}
+	}
+
 	printf("Incoming port: %u outgoing port: %u on loopback interface\n",
 		 listen_port, forward_port);
 
@@ -69,6 +88,9 @@ int main(int argc, char* argv[]){
 
 	printf("Ignoring DKIM signed messages: %s\n",
 		abort_on_dkim ? "true" : "false");
+	
+	printf("Instance id for messages: %s\n",
+		instance_id);
 
 	if(init_net() < 0){
 		return EXIT_FAILURE;

@@ -26,4 +26,6 @@ extern uint16_t listen_port, forward_port;
 
 extern int abort_on_pgp, abort_on_dkim;
 
+extern char* instance_id;
+
 #endif /* CONFIG_H */

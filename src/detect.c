@@ -58,6 +58,7 @@ bool detect_dkim(struct email_t* mail){
 		if(strcasestr(mail->message, dkim_signatures[i]) != NULL
 				&& strcasestr(mail->message, dkim_signatures[i])
 				<= (mail->message+mail->header_len)){
+			/* DKIM only happens inside the header, not the body! */
 			points++;
 		}
 		
