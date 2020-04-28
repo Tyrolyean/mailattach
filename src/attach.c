@@ -98,7 +98,10 @@ char* attach_files(char* message, size_t len){
 	/* Now we can start the real work! */
 	
 	/* Announce our presence via header */
-	append_header(&email,"X-Mailattached", instance_id);
+	if(append_header(&email,"X-Mailattached", instance_id) < 0){
+		fprintf(stderr, "Failed to attach header!\n");
+		return email.message;
+	}
 	return email.message;
 }
 
