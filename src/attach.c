@@ -66,7 +66,7 @@ void redetect_body_head(struct email_t* mail){
 	}
 	
 	mail->body_offset = body_start - mail->message;
-	mail->header_len = last_lf - mail->message;
+	mail->header_len = last_lf - mail->message - 1 /* for the CR */;
 	return;
 	
 	

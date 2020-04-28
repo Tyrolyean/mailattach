@@ -92,6 +92,24 @@ void receive_mail(struct mail_recv_t* rec){
 			size_t body_len = rec->body_p-
 				(rec->input_buffer+rec->body_offs);
 			
+			/* Copy the after body message and reduce original 
+			 * pointer to mail size to allow reallocs */
+			 size_t abody_len = rec->in_len-
+				(rec->body_offs+body_len);
+			
+			void * abody = malloc(abody_len);
+			memcpy(abody,
+				rec->input_buffer+rec->body_offs+body_len, 
+				abody_len);
+			
+			/* reduce the input buffer to the body */
+			memmove(rec->input_buffer, 
+				rec->input_buffer+rec->body_offs, body_len);
+			rec->input_buffer = realloc(rec->input_buffer, 
+				body_len + 1);
+			rec->input_buffer[body_len+1] = 0;
+			rec->in_len = body_len;
+
 			char* new_body = attach_files(
 				rec->input_buffer+rec->body_offs, 
 				body_len);
@@ -112,8 +130,8 @@ void receive_mail(struct mail_recv_t* rec){
 			/* Rest of conversation after message */
 
 			write((rec->fds[1].fd), 
-				rec->input_buffer+rec->body_offs+body_len, 
-				rec->in_len-(rec->body_offs+body_len));
+				abody, 
+				abody_len);
 
 			rec->after_body = true;
 			
