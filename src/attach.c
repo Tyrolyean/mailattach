@@ -18,23 +18,71 @@
 
 #include "attach.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <ctype.h>
 #include <stdlib.h>
 
-char* attach_files(FILE* buffer){
-	fseek(buffer, 0, SEEK_END);
-	size_t len = ftell(buffer);
+struct email_t mail_from_text(char* message, size_t length){
+	
+	struct email_t mail;
+	memset(&mail, 0, sizeof(mail));
+	mail.message = message;
+	mail.message_length = length;
+	
+	redetect_body_head(&mail);
 
-	char* new_body = malloc(len + 1);
-	if(new_body == NULL){
-		return NULL;
-	}
-	memset(new_body,0, len + 1);
-	fseek(buffer, 0, SEEK_SET);
-	if(fread(new_body, 1, len, buffer) <= 0){
-		perror("Failed to read file buffer");
-		free(new_body);
+	return mail;
+}
+
+void redetect_body_head(struct email_t* mail){
+	
+	char* last_lf = NULL;
+	char* body_start = NULL;
+	bool found_alnum = false;
+	for(size_t i = 0; i < mail->message_length; i++){
+		if(mail->message[i] == '\n' && !found_alnum){
+			body_start = &(mail->message[i+1]);
+			break;
+			
+		}else if(mail->message[i] == '\n'){
+			last_lf = &(mail->message[i]);
+			found_alnum = false;
+		}else if(isalnum(mail->message[i])){
+			found_alnum = true;
+		}
 	}
 
-	return new_body;
+	/* In that case we only have a body and no header, or something along
+	 * those lines... In any case, if postfix delivers that to us, something
+	 * is probably wrong!
+	 */
+
+	if(body_start == NULL) {
+		fprintf(stderr, "Received message without header!");
+		mail->header_len = 0;
+		mail->body_offset = 0;
+		return;
+	}
+	
+	mail->body_offset = body_start - mail->message;
+	mail->header_len = last_lf - mail->message;
+	return;
+	
+	
+}
+
+char* attach_files(char* message, size_t len){
+
+	struct email_t email = mail_from_text(message,len);
+	
+	printf("Received message header: [%.*s]\n", email.header_len, 
+		email.message);
+	printf("Received message body: [%s]\n", 
+		email.message + email.body_offset);
+
+	/* Now we have a null terminated body which we can edit! */
+
+	return email.message;
 }
 

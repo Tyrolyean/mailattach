@@ -65,7 +65,7 @@ void* client_handle_async(void* params){
 	}
 
 	int n; /* message byte size */
-	char buf[10];
+	char buf[1000];
 	struct pollfd fds[2];
 	memset(fds, 0 , sizeof(fds));
 	fds[0].fd = cli->fd;
@@ -84,17 +84,17 @@ void* client_handle_async(void* params){
 
 	while(poll(fds, 2, timeout) > 0){
 		for(size_t i = 0; i < 2; i++){
+			
 			if(!(fds[i].revents & POLLIN)){
 				continue;
 
 			}
+
 			bzero(buf, sizeof(buf));
 			n = read(fds[i].fd, buf, sizeof(buf)-1);
 			if (n <= 0) {
 				goto closeup;
 			}
-			printf("%lu:[%s]", i, buf);
-			
 
 			if(i==0 && !in_body){
 				/* As long as we are outside the real mail body 
@@ -112,7 +112,7 @@ void* client_handle_async(void* params){
 					write((fds[!i].fd), 
 						input_buffer+(in_len-n), 
 						body_offs-(in_len-n));
-					printf("Beginning of body found! "
+					printf("Beginning of message found! "
 						"Awaiting end...\n");
 					
 				}else{
@@ -124,22 +124,35 @@ void* client_handle_async(void* params){
 				 */
 				in_len += n;
 				input_buffer = realloc(input_buffer, in_len);
-				strncat(input_buffer,buf, n);
+				strncat(input_buffer, buf, n);
 				body_p = detect_end_of_body(input_buffer+ 
 					body_offs);
 
 				if(body_p != NULL){
 					
-					printf("We found the body:\n%.*s\n",
-						body_p-(input_buffer+body_offs),
-						input_buffer+body_offs);
-
+					printf("Data found, interpreting...\n");
 					size_t body_len = body_p-
 						(input_buffer+body_offs);
-
-					write((fds[!i].fd), 
+					
+					char* new_body = attach_files(
 						input_buffer+body_offs, 
 						body_len);
+					
+					if(new_body != NULL){
+						/* Write the replacement */
+						write((fds[!i].fd), new_body, 
+							strlen(new_body));
+						free(new_body);
+					}else{
+						/* Write the original */
+						write((fds[!i].fd), 
+							input_buffer+body_offs, 
+							body_len);
+						
+					}
+
+					/* Rest of conversation after message */
+
 					write((fds[!i].fd), 
 						input_buffer+body_offs+body_len, 
 						in_len-(body_offs+body_len));
