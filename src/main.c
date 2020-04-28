@@ -35,81 +35,91 @@ void error(char *msg) {
   exit(1);
 }
 
+struct mail_recv_t{
+	char* input_buffer;
+	size_t in_len;
+	bool in_body;
+	bool after_body;
+	char* body_p;
+	size_t body_offs;
+	struct pollfd fds[2];
+	int n;
+	char buf[1000];
+
+};
 
 struct client_info {
 	int fd;
 };
 
-void receive_mail(char** input_buffer, size_t *in_len, bool *in_body, 
-	bool *after_body, char** body_p, size_t *body_offs, struct pollfd fds[2],
-	char *buf, int n){
+void receive_mail(struct mail_recv_t* rec){
+
 	
-	if(!*in_body){
+	if(!rec->in_body){
 		/* As long as we are outside the real mail body 
 		 * we can basically passthrough the commands 
 		 */
-		*in_len += n;
-		*input_buffer = realloc(*input_buffer, *in_len);
-		strncat(*input_buffer,buf, n);
-		*body_p = detect_start_of_body(*input_buffer);
-		if(*body_p != NULL){
+		rec->in_len += rec->n;
+		rec->input_buffer = realloc(rec->input_buffer, rec->in_len);
+		strncat(rec->input_buffer,rec->buf, rec->n);
+		rec->body_p = detect_start_of_body(rec->input_buffer);
+		if(rec->body_p != NULL){
 			/* We reached the beginning of the body
 			 * now! */
-			*body_offs = body_p - input_buffer;
-			*in_body = true;
-			write((fds[1].fd), 
-				*input_buffer+(*in_len-n), 
-				*body_offs-(*in_len-n));
-			printf("Beginning of message found! "
-				"Awaiting end...\n");
+			rec->body_offs = rec->body_p - rec->input_buffer;
+			rec->in_body = true;
+			write((rec->fds[1].fd), 
+				rec->input_buffer+(rec->in_len-rec->n), 
+				rec->body_offs-(rec->in_len-rec->n));
+			printf("Beginning of message found! Awaiting end...\n");
 			
 		}else{
-			write((fds[1].fd), buf, n);
+			write((rec->fds[1].fd), rec->buf, rec->n);
 
 		}
-	} else if(!*after_body){
+	} else if(!rec->after_body){
 		/* We keep the body until we have it completely
 		 */
-		*in_len += n;
-		*input_buffer = realloc(*input_buffer, *in_len);
-		strncat(*input_buffer, buf, n);
-		*body_p = detect_end_of_body(*input_buffer+ 
-			*body_offs);
+		rec->in_len += rec->n;
+		rec->input_buffer = realloc(rec->input_buffer, rec->in_len);
+		strncat(rec->input_buffer, rec->buf, rec->n);
+		rec->body_p = detect_end_of_body(rec->input_buffer+ 
+			rec->body_offs);
 
-		if(*body_p != NULL){
+		if(rec->body_p != NULL){
 			
 			printf("Data found, interpreting...\n");
-			size_t body_len = *body_p-
-				(*input_buffer+*body_offs);
+			size_t body_len = rec->body_p-
+				(rec->input_buffer+rec->body_offs);
 			
 			char* new_body = attach_files(
-				*input_buffer+*body_offs, 
+				rec->input_buffer+rec->body_offs, 
 				body_len);
 			
 			if(new_body != NULL){
 				/* Write the replacement */
-				write((fds[1].fd), new_body, 
+				write((rec->fds[1].fd), new_body, 
 					strlen(new_body));
 				free(new_body);
 			}else{
 				/* Write the original */
-				write((fds[1].fd), 
-					*input_buffer+*body_offs, 
+				write((rec->fds[1].fd), 
+					rec->input_buffer+rec->body_offs, 
 					body_len);
 				
 			}
 
 			/* Rest of conversation after message */
 
-			write((fds[1].fd), 
-				*input_buffer+*body_offs+body_len, 
-				*in_len-(*body_offs+body_len));
+			write((rec->fds[1].fd), 
+				rec->input_buffer+rec->body_offs+body_len, 
+				rec->in_len-(rec->body_offs+body_len));
 
-			*after_body = true;
+			rec->after_body = true;
 			
 		}
 	}else{
-		write((fds[1].fd), buf, n);
+		write((rec->fds[1].fd), rec->buf, rec->n);
 
 	}
 	return;
@@ -140,46 +150,43 @@ void* client_handle_async(void* params){
 		error("ERROR connecting");
 	}
 
-	int n; /* message byte size */
-	char buf[1000];
-	struct pollfd fds[2];
-	memset(fds, 0 , sizeof(fds));
-	fds[0].fd = cli->fd;
-	fds[0].events = POLLIN;
-	fds[1].fd = remote_fd;
-	fds[1].events = POLLIN;
+	struct mail_recv_t rec;
+	memset(&rec,0,sizeof(rec));
+	
+	rec.fds[0].fd = cli->fd;
+	rec.fds[0].events = POLLIN;
+	rec.fds[1].fd = remote_fd;
+	rec.fds[1].events = POLLIN;
 	
 	int timeout = (10 * 1000); /* 10 seconds */
 
-	char * input_buffer = malloc(1);
-	input_buffer[0]=0;
-	size_t in_len = 1;
-	bool in_body = false, after_body = false;
-	char* body_p = NULL;
-	size_t body_offs = 0;
+	rec.input_buffer = malloc(1);
+	rec.input_buffer[0]=0;
+	rec.in_len = 1;
+	rec.in_body = false;
+	rec.after_body = false;
+	rec.body_p = NULL;
+	rec.body_offs = 0;
 
-	while(poll(fds, 2, timeout) > 0){
+	while(poll(rec.fds, 2, timeout) > 0){
 		for(size_t i = 0; i < 2; i++){
 			
-			if(!(fds[i].revents & POLLIN)){
+			if(!(rec.fds[i].revents & POLLIN)){
 				continue;
 
 			}
 
-			bzero(buf, sizeof(buf));
-			n = read(fds[i].fd, buf, sizeof(buf)-1);
-			if (n <= 0) {
+			bzero(rec.buf, sizeof(rec.buf));
+			rec.n = read(rec.fds[i].fd, rec.buf, sizeof(rec.buf)-1);
+			if (rec.n <= 0) {
 				goto closeup;
 			}
 
 			if(i == 0){
-				receive_mail(&input_buffer, 
-					&in_len, &in_body, &after_body,
-					&body_p, &body_offs, 
-					fds, buf, n);
+				receive_mail(&rec);
 				
 			}else{
-				write((fds[!i].fd), buf, n);
+				write((rec.fds[!i].fd), rec.buf, rec.n);
 
 			}
 			
@@ -192,7 +199,7 @@ closeup:
 	close(cli->fd);
 	close(remote_fd);
 	free(cli);
-	free(input_buffer);
+	free(rec.input_buffer);
 	
 	return NULL;
 }
