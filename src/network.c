@@ -248,7 +248,8 @@ int init_net(){
 	serveraddr.sin_port = htons((unsigned short)listen_port);
 
 	if (bind(parentfd, (struct sockaddr *) &serveraddr,
-	   sizeof(serveraddr)) < 0) {
+		sizeof(serveraddr)) < 0) {
+		
 		perror("ERROR on binding");
 		return -1;
 	}

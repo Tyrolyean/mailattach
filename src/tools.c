@@ -24,7 +24,7 @@
 /* Takes a string destination and inserts at the given point offset the string
  * in source. Really more like a stringcat with shifting the end. 
  * dest_orig_len is without '\0'*/
-const char* insert_string(char * destination, const char* source, 
+char* insert_string(char * destination, const char* source, 
 	size_t dest_orig_len, size_t offset){
 
 	if(source == NULL|| dest_orig_len < offset){

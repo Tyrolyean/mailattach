@@ -1,5 +1,5 @@
 /*
- * tools.h - Utility functions
+ * mail.h - Mail editing toolset
  * The author licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -15,13 +15,23 @@
  * under the License.
  */
 
-#ifndef TOOLS_H
-#define TOOLS_H
+#ifndef MAIL_H
+#define MAIL_H
 
+#include <stdint.h>
 #include <stddef.h>
 
-char* insert_string(char * destination, const char* source, 
-	size_t dest_orig_len, size_t offset);
+struct email_t{
+	char* message;
+	/* From the below values you can say pretty much anything about the 
+	 * message. The line delimiting body and header is left out. The header
+	 * len includes the last \r\n of the header. If header len is zero,
+	 * there was no clear distinction between header and body...
+	 */
+	size_t header_len, body_offset, message_length;
+};
 
+int append_header(struct email_t* mail, const char* key, const char* value);
+int append_to_header(struct email_t* mail, const char* pair);
 
-#endif /* TOOLS_H */
+#endif /* MAIL_H */

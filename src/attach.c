@@ -19,6 +19,7 @@
 #include "attach.h"
 #include "detect.h"
 #include "config.h"
+#include "mail.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -94,6 +95,10 @@ char* attach_files(char* message, size_t len){
 		return email.message;
 	}
 
+	/* Now we can start the real work! */
+	
+	/* Announce our presence via header */
+	append_header(&email,"X-Mailattached", instance_id);
 	return email.message;
 }
 

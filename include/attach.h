@@ -21,15 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-struct email_t{
-	char* message;
-	/* From the below values you can say pretty much anything about the 
-	 * message. The line delimiting body and header is left out. The header
-	 * len includes the last \r\n of the header. If header len is zero,
-	 * there was no clear distinction between header and body...
-	 */
-	size_t header_len, body_offset, message_length;
-};
+#include "mail.h"
 
 struct email_t mail_from_text(char* message, size_t length);
 void redetect_body_head(struct email_t* mail);
