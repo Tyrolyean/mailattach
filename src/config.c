@@ -23,4 +23,4 @@ uint16_t listen_port = 4269, forward_port = 4270;
 int abort_on_pgp = true, abort_on_dkim = true;
 char* instance_id = NULL;
 
-bool verbose = false;
+int verbose = false;

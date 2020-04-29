@@ -59,7 +59,7 @@ char* search_header_key(struct email_t* mail, const char* key){
 	}
 	size_t keylen = strlen(key);
 
-	for(size_t i = 0; i < (mail->header_len - keylen); i++){
+	for(size_t i = 0; (i+keylen) < mail->header_len; i++){
 		if(mail->message[i] == '\n' || i == 0){
 			if(strncasecmp(&mail->message[i+1], key, keylen) == 0){
 				return &mail->message[i+1];

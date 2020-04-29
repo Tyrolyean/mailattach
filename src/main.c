@@ -28,6 +28,8 @@ int main(int argc, char* argv[]){
 			{"abort-dkim",	no_argument, &abort_on_dkim,1},
 			{"noabort-pgp",	no_argument, &abort_on_pgp, 0},
 			{"noabort-dkim",no_argument, &abort_on_dkim,0},
+			{"verbose",	no_argument, &verbose,      1},
+			{"quiet",	no_argument, &verbose,      0},
 			{"in-port",	required_argument, 0, 'i'},
 			{"out-port",	required_argument, 0, 'o'},
 			{"instance-id",	required_argument, 0, 'n'},
@@ -79,18 +81,20 @@ int main(int argc, char* argv[]){
 			perror("gethostname failed! set instance id manually");
 		}
 	}
+	if(verbose){
 
-	printf("Incoming port: %u outgoing port: %u on loopback interface\n",
-		 listen_port, forward_port);
+		printf("Incoming port: %u outgoing port: %u on loopback "
+			"interface\n",  listen_port, forward_port);
 
-	printf("Ignoring PGP signed/encrypted messages: %s\n",
-		abort_on_pgp ? "true":false);
+		printf("Ignoring PGP signed/encrypted messages: %s\n",
+			abort_on_pgp ? "true":false);
 
-	printf("Ignoring DKIM signed messages: %s\n",
-		abort_on_dkim ? "true" : "false");
-	
-	printf("Instance id for messages: %s\n",
-		instance_id);
+		printf("Ignoring DKIM signed messages: %s\n",
+			abort_on_dkim ? "true" : "false");
+		
+		printf("Instance id for messages: %s\n",
+			instance_id);
+	}
 
 	if(init_net() < 0){
 		return EXIT_FAILURE;

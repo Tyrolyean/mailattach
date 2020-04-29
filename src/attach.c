@@ -50,6 +50,9 @@ struct email_t* mail_from_text(char* message, size_t length,
 	char* cont_type = search_header_key(mail, "Content-Type");
 	if(cont_type == NULL){
 		/* Halleluja, I've got nothing to do! WOO */
+		if(verbose){
+			printf("Mail found without content type!");
+		}
 		mail->is_multipart = false;
 		return mail;
 	}else{
