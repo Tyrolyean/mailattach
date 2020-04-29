@@ -70,11 +70,18 @@ int append_to_header(struct email_t* mail, const char* pair){
 	struct email_t* root = get_root_mail(mail);
 	size_t root_offset = mail->header_len + (mail->message - root->message);
 
-	mail->message=insert_string(mail->message, buffer, mail->message_length, 
-		mail->header_len);
-	
 	propagate_insert_delete(root, root->message+root_offset, 
 		strlen(buffer));
+	char* old_root = root->message;
+	char * new_root = insert_string(root->message, buffer, 
+		root->message_length, root_offset);
+	if(new_root == NULL){
+		return -1;
+	}	
+	mail->message_length += strlen(buffer);	
+
+	propagate_root_pointer(root, new_root, old_root);
+	
 	
 	free(buffer);
 	redetect_body_head(mail);
@@ -118,6 +125,31 @@ void propagate_insert_delete(struct email_t* mail, char* change_p,
 		for(size_t i = 0; i < mail->submes_cnt; i++){
 			propagate_insert_delete(mail->submes[i], change_p, 
 				change);
+		}
+	}
+	
+	return;
+}
+
+/* This propagates a root pointer change down to all submessages.
+ * Call this function with the root, changes will propagate down via recursion!
+ * The change pointer should point to the new root pointer for all messages,
+ * the old_p pointer should be the old root pointer
+ */
+void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p){
+	
+	if(mail == NULL || change_p == NULL ||old_p == NULL){
+		/* MISSION ABORT!! */
+		return;
+	}
+	
+	size_t delta = mail->message - old_p;
+	mail->message = change_p + delta;
+
+	if(mail->is_multipart){
+		for(size_t i = 0; i < mail->submes_cnt; i++){
+			propagate_root_pointer(mail->submes[i], change_p, 
+				old_p);
 		}
 	}
 	

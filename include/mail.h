@@ -61,6 +61,7 @@ struct email_t* get_root_mail(struct email_t* mail);
 
 void propagate_insert_delete(struct email_t* mail, char* change_p,  
 	ssize_t change);
+void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p);
 
 #define MULTIPART_MIME "multipart/"
 
