@@ -96,6 +96,7 @@ struct email_t* mail_from_text(char* message, size_t length,
 			}
 		}
 	}
+	mail->base64_encoded = detect_base64(mail);
 
 	return mail;
 }
@@ -272,6 +273,7 @@ char* attach_files(char* message, size_t len){
 		fprintf(stderr, "Failed to attach header!\n");
 		goto finish;
 	}
+	
 finish:
 	mess = email->message;
 	free_submails(email);

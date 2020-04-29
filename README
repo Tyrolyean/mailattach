@@ -26,6 +26,18 @@ You can specify the following command line options:
 --out-port -o
 	The outgoing smtp port/the port to which mail ist passed through.
 
+--directory -d
+	The directory inside of which the attachments will be stored in.
+
+--url -u
+	The base which should point to the same location as the directory does,
+	for exaple if the directory is /var/www/html and the URL base is 
+	https://example.com then a file in /var/www/html/attachment01.pdf should
+	be linkable via https://example.com/attachment01.pdf
+	Ah and please, please, pretty please disable directory indexing on your
+	webserver! 
+	That WILL BE a security riks!
+
 HOWTO
 
 We essentially are MITM sniffing your email traffic and playing proxy from your

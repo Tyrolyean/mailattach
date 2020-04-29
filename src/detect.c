@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "detect.h"
+#include "tools.h"
 
 char* pgp_signatures[] = 
 {
@@ -111,3 +112,35 @@ char* detect_end_of_body(char* message){
 	return strstr(message, data);
 	
 }
+
+bool detect_base64(const struct email_t* mail){
+	
+	char* encoding = search_header_key(mail, "Content-Transfer-Encoding");
+	
+	if(encoding == NULL){
+		return false;
+	}else{
+		
+		size_t value_length = 0;
+		char * type = get_value_from_key(&value_length, 
+			encoding - mail->message, mail);
+
+		if(type != NULL){
+			
+			if(strncasecmp(type, BASE64_ENC, strlen(BASE64_ENC)) 
+				== 0){
+
+				return true;
+
+			}else{
+				return false;
+			}
+
+		}else{
+			return false;
+		}
+	}
+
+
+}
+

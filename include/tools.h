@@ -24,14 +24,16 @@
 char* insert_string(char * destination, const char* source, 
 	size_t dest_orig_len, size_t offset);
 
-char* search_header_key(struct email_t* mail, const char* key);
+char* search_header_key(const struct email_t* mail, const char* key);
 
 char* get_value_from_key(size_t* val_len, size_t key_offset, 
-	struct email_t* mail);
+	const struct email_t* mail);
 
 char* get_multipart_boundary(char* content_type, size_t content_len,
 	size_t* boundary_len);
 
 const char* get_next_line(const char* message, size_t len);
 const char* get_prev_line(const char* message, size_t len_neg);
+
+bool detect_base64(const struct email_t* mail);
 #endif /* TOOLS_H */

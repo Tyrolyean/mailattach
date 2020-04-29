@@ -52,7 +52,7 @@ char* insert_string(char * destination, const char* source,
 /* Searches the given header for the key provided and, if found, returns the
  * pointer to that key NOT the value 
  */
-char* search_header_key(struct email_t* mail, const char* key){
+char* search_header_key(const struct email_t* mail, const char* key){
 	
 	if(mail == NULL || key == NULL){
 		return NULL;
@@ -79,7 +79,7 @@ char* search_header_key(struct email_t* mail, const char* key){
  * otherwise a pointer to the first character of the value is returned.
  */
 char* get_value_from_key(size_t* val_len, size_t key_offset, 
-	struct email_t* mail){
+	const struct email_t* mail){
 	
 	if(val_len == NULL || mail == NULL){
 

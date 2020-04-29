@@ -52,6 +52,7 @@ struct email_t{
 	size_t submes_cnt;
 	struct email_t** submes;
 	struct email_t* parent;
+	bool base64_encoded;
 };
 
 int append_header(struct email_t* mail, const char* key, const char* value);
@@ -64,5 +65,6 @@ void propagate_insert_delete(struct email_t* mail, char* change_p,
 void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p);
 
 #define MULTIPART_MIME "multipart/"
+#define BASE64_ENC "base64"
 
 #endif /* MAIL_H */
