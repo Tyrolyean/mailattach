@@ -142,8 +142,8 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 		return -1;
 	}
 	if(verbose){
-		printf("Storing base64 file len %lu top [%s]\n",
-			dec_len, decoded);
+		printf("Storing base64 file len %lu to [%s]\n",
+			dec_len, filename);
 	}
 
 	fwrite(decoded, dec_len, 1, outfile);
