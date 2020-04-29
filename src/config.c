@@ -24,3 +24,6 @@ int abort_on_pgp = true, abort_on_dkim = true;
 char* instance_id = NULL;
 
 int verbose = false;
+char* directory = NULL;
+char* url_base = NULL;
+

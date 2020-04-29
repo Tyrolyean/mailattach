@@ -33,12 +33,14 @@ int main(int argc, char* argv[]){
 			{"in-port",	required_argument, 0, 'i'},
 			{"out-port",	required_argument, 0, 'o'},
 			{"instance-id",	required_argument, 0, 'n'},
+			{"directory",	required_argument, 0, 'd'},
+			{"url",		required_argument, 0, 'u'},
 			{0, 0, 0, 0}
 		};
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long (argc, argv, "n:i:o:pd",
+		c = getopt_long (argc, argv, "n:i:o:d:u:",
 			       long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -59,6 +61,13 @@ int main(int argc, char* argv[]){
 			
 		case 'n':
 			instance_id = optarg;
+			break;
+		
+		case 'd':
+			directory = optarg;
+			break;
+		case 'u':
+			url_base = optarg;
 			break;
 
 		case '?':
@@ -81,6 +90,17 @@ int main(int argc, char* argv[]){
 			perror("gethostname failed! set instance id manually");
 		}
 	}
+
+	if(directory == NULL){
+		fprintf(stderr, "directory option MUST be set!\n");
+		return EXIT_FAILURE;
+	}
+	
+	if(url_base == NULL){
+		fprintf(stderr, "url option MUST be set!\n");
+		return EXIT_FAILURE;
+	}
+
 	if(verbose){
 
 		printf("Incoming port: %u outgoing port: %u on loopback "
@@ -94,6 +114,9 @@ int main(int argc, char* argv[]){
 		
 		printf("Instance id for messages: %s\n",
 			instance_id);
+		
+		printf("Placing files into [%s] linked by [%s]\n", directory,
+		url_base);
 	}
 
 	if(init_net() < 0){

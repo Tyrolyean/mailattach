@@ -30,4 +30,8 @@ extern char* instance_id;
 
 extern int verbose;
 
+extern char* directory;
+extern char* url_base;
+
+
 #endif /* CONFIG_H */
