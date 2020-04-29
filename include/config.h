@@ -28,4 +28,6 @@ extern int abort_on_pgp, abort_on_dkim;
 
 extern char* instance_id;
 
+extern bool verbose;
+
 #endif /* CONFIG_H */

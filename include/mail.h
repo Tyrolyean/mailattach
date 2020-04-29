@@ -30,7 +30,14 @@ struct email_t{
 	 * there was no clear distinction between header and body...
 	 */
 	size_t header_len, body_offset, message_length;
+
+	/* Apparently emails consist of several smaller emails if you send an
+	 * attachment alongside them. This also happens when you send an email
+	 * as html. Therefore emails are recursive. Ask apple, their mail client
+	 * is basically insane by this point...
+	 */
 	bool is_multipart;
+	size_t boundary_len;
 	char* boundary;
 	size_t submes_cnt;
 	struct email_t** submes;

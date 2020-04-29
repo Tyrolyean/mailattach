@@ -28,39 +28,50 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-struct email_t mail_from_text(char* message, size_t length){
+struct email_t* mail_from_text(char* message, size_t length){
 	
-	struct email_t mail;
-	memset(&mail, 0, sizeof(mail));
-	mail.message = message;
-	mail.message_length = length;
-	mail.submes_cnt = 0;
-	mail.submes = NULL;
+	struct email_t* mail = malloc(sizeof(struct email_t));;
+	memset(mail, 0, sizeof(struct email_t));
+	mail->message = message;
+	mail->message_length = length;
+	mail->submes_cnt = 0;
+	mail->submes = NULL;
+	mail->is_multipart = false;
+	mail->boundary = NULL;
+	mail->boundary_len = 0;
 	
-	redetect_body_head(&mail);
-	char* cont_type = search_header_key(&mail, "Content-Type");
+	redetect_body_head(mail);
+	char* cont_type = search_header_key(mail, "Content-Type");
 	if(cont_type == NULL){
 		/* Halleluja, I've got nothing to do! WOO */
-		mail.is_multipart = false;
+		mail->is_multipart = false;
 		return mail;
 	}else{
 		size_t value_length = 0;
 		char * mime_type = get_value_from_key(&value_length, 
-			cont_type - mail.message, &mail);
+			cont_type - mail->message, mail);
 		if(mime_type != NULL){
 			if(strncasecmp(mime_type, MULTIPART_MIME, 
 				strlen(MULTIPART_MIME)) == 0){
 				/* We have multiple messages cramped inside this
 				 * one. Let's unravel em!
 				 */
+				mail->is_multipart = true;
 				 size_t bd_len = 0;
 				char* bd = get_multipart_boundary(
 					mime_type, value_length, &bd_len);
+				
 				if(bd != NULL){
-					printf("Received boundary: [%.*s]\n",
-						(int)bd_len, bd);
+					mail->boundary = bd;
+					mail->boundary_len = bd_len;
+					
+					if(verbose){
+						printf("Received boundary: "
+							"[%.*s]\n",
+							(int)bd_len, bd);
+					}
 				}
-				unravel_multipart_mail(&mail, bd, bd_len);
+				unravel_multipart_mail(mail);
 
 			}
 		}
@@ -106,9 +117,62 @@ void redetect_body_head(struct email_t* mail){
 	
 }
 
-void unravel_multipart_mail(struct email_t* mail, char* boundary, 
-	size_t boundary_len){
+/* This function creates the submail-messages from the boundary defined for
+ * multipart messages. This function doesN'T perform header checks for that
+ * boundary!
+ */
+void unravel_multipart_mail(struct email_t* mail){
+	
+	if(mail == NULL || !mail->is_multipart || mail->boundary == NULL){
+		return;
+	}
+	
 
+	char ** mail_boundarys = NULL;
+	size_t mb_cnt = 0;
+	char* boundary = malloc(mail->boundary_len+1);
+	memset(boundary, 0, mail->boundary_len+1);
+	memcpy(boundary,mail->boundary, mail->boundary_len);
+	
+	char* newloc = mail->message + mail->body_offset;
+
+	for(;newloc < mail->message + mail->message_length;){
+		newloc = strstr(newloc, 
+			boundary);
+		if(newloc == NULL || newloc > 
+			(mail->message + mail->message_length)){
+			
+			break;
+
+		}else{
+			mail_boundarys = realloc(mail_boundarys, 
+				++mb_cnt*(sizeof(char*)));
+			mail_boundarys[mb_cnt-1] = newloc;
+		}
+		newloc++;
+	}
+	
+	if(verbose){
+		printf("Found %lu boundarys inside mail, which means %li "
+			"submessages\n", mb_cnt, mb_cnt-1);
+	}
+	
+	free(mail_boundarys);
+	free(boundary);
+	return;
+
+}
+
+void free_submails(struct email_t* mail){
+	
+	if(!mail->is_multipart){
+		return;
+	}
+	for(size_t i = 0; i < mail->submes_cnt; i++){
+		free_submails(mail->submes[i]);
+		free(mail->submes[i]);
+	}
+	free(mail->submes);
 	return;
 
 }
@@ -118,27 +182,32 @@ void unravel_multipart_mail(struct email_t* mail, char* boundary,
  * Attempts to replace files inside the email with links to it on a webserver
  */
 char* attach_files(char* message, size_t len){
-
-	struct email_t email = mail_from_text(message,len);
+	
+	char* mess;
+	struct email_t *email = mail_from_text(message,len);
 	
 	/* Check if mails are signed/encrypted, and abort if nescessary */
-	if(abort_on_pgp && detect_pgp(&email)){
+	if(abort_on_pgp && detect_pgp(email)){
 		printf("PGP detected, aborting...");
-		return email.message;
+		goto finish;
 	}
 	/* Check if mails are signed/encrypted, and abort if nescessary */
-	if(abort_on_dkim && detect_dkim(&email)){
+	if(abort_on_dkim && detect_dkim(email)){
 		printf("DKIM signature detected, aborting...");
-		return email.message;
+		goto finish;
 	}
 
 	/* Now we can start the real work! */
 	
 	/* Announce our presence via header */
-	if(append_header(&email,"X-Mailattached", instance_id) < 0){
+	if(append_header(email,"X-Mailattached", instance_id) < 0){
 		fprintf(stderr, "Failed to attach header!\n");
-		return email.message;
+		goto finish;
 	}
-	return email.message;
+finish:
+	mess = email->message;
+	free_submails(email);
+	free(email);
+	return mess;
 }
 

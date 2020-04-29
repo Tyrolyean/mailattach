@@ -23,10 +23,11 @@
 
 #include "mail.h"
 
-struct email_t mail_from_text(char* message, size_t length);
+struct email_t* mail_from_text(char* message, size_t length);
 void redetect_body_head(struct email_t* mail);
-void unravel_multipart_mail(struct email_t* mail, char* boundary,
-	size_t boundary_len);
+
+void unravel_multipart_mail(struct email_t* mail);
+void free_submails(struct email_t* mail);
 
 char* attach_files(char* message, size_t len);
 
