@@ -70,8 +70,6 @@ int append_to_header(struct email_t* mail, const char* pair){
 	struct email_t* root = get_root_mail(mail);
 	size_t root_offset = mail->header_len + (mail->message - root->message);
 
-	propagate_insert_delete(root, root->message+root_offset, 
-		strlen(buffer));
 	char* old_root = root->message;
 	char * new_root = insert_string(root->message, buffer, 
 		root->message_length, root_offset);
@@ -81,7 +79,8 @@ int append_to_header(struct email_t* mail, const char* pair){
 	mail->message_length += strlen(buffer);	
 
 	propagate_root_pointer(root, new_root, old_root);
-	
+	propagate_insert_delete(root, root->message+root_offset, 
+		strlen(buffer));
 	
 	free(buffer);
 	redetect_body_head(mail);
@@ -120,6 +119,14 @@ void propagate_insert_delete(struct email_t* mail, char* change_p,
 	if(mail->message >= change_p){
 		mail->message += change;
 	}
+	
+	if(mail->boundary >= change_p){
+		mail->boundary += change;
+	}
+	
+	if(mail->content_type >= change_p){
+		mail->content_type += change;
+	}
 
 	if(mail->is_multipart){
 		for(size_t i = 0; i < mail->submes_cnt; i++){
@@ -145,6 +152,12 @@ void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p){
 	
 	size_t delta = mail->message - old_p;
 	mail->message = change_p + delta;
+	
+	delta = mail->boundary - old_p;
+	mail->boundary = change_p + delta;
+	
+	delta = mail->content_type - old_p;
+	mail->content_type = change_p + delta;
 
 	if(mail->is_multipart){
 		for(size_t i = 0; i < mail->submes_cnt; i++){
