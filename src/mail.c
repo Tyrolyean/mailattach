@@ -67,9 +67,15 @@ int append_to_header(struct email_t* mail, const char* pair){
 	buffer[0] = '\r';
 	buffer[1] = '\n';
 	strcat(buffer, pair);
+	struct email_t* root = get_root_mail(mail);
+	size_t root_offset = mail->header_len + (mail->message - root->message);
 
 	mail->message=insert_string(mail->message, buffer, mail->message_length, 
 		mail->header_len);
+	
+	propagate_insert_delete(root, root->message+root_offset, 
+		strlen(buffer));
+	
 	free(buffer);
 	redetect_body_head(mail);
 
@@ -77,3 +83,43 @@ int append_to_header(struct email_t* mail, const char* pair){
 
 }
 
+struct email_t* get_root_mail(struct email_t* mail){
+	
+	if(mail == NULL){
+		return NULL;
+	}
+	
+	if(mail->parent == NULL){
+		return mail;
+	}else{
+		return get_root_mail(mail->parent);
+	}
+
+}
+
+/* This propagates a size change inside the root email down to all submails
+ * Call this function with the root, changes will propagate down via recursion!
+ * The change pointer should point to the last character IN FRONT of the change.
+ * an insert has a positive amount of chane, a delete a negative one.
+ */
+void propagate_insert_delete(struct email_t* mail, char* change_p,
+	ssize_t change){
+	
+	if(mail == NULL || change_p == NULL || change == 0){
+		/* MISSION ABORT!! */
+		return;
+	}
+
+	if(mail->message >= change_p){
+		mail->message += change;
+	}
+
+	if(mail->is_multipart){
+		for(size_t i = 0; i < mail->submes_cnt; i++){
+			propagate_insert_delete(mail->submes[i], change_p, 
+				change);
+		}
+	}
+	
+	return;
+}

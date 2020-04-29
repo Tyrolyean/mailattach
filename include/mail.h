@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 struct email_t{
 	char* message;
@@ -55,6 +56,11 @@ struct email_t{
 
 int append_header(struct email_t* mail, const char* key, const char* value);
 int append_to_header(struct email_t* mail, const char* pair);
+
+struct email_t* get_root_mail(struct email_t* mail);
+
+void propagate_insert_delete(struct email_t* mail, char* change_p,  
+	ssize_t change);
 
 #define MULTIPART_MIME "multipart/"
 

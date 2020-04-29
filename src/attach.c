@@ -64,10 +64,12 @@ struct email_t* mail_from_text(char* message, size_t length,
 		if(mime_type != NULL){
 			mail->ct_len = value_length;
 			mail->content_type = mime_type;
+
 			if(verbose){
 				printf("Found content type: %.*s\n",
 					(int)value_length, mime_type);
 			}
+			
 			if(strncasecmp(mime_type, MULTIPART_MIME, 
 				strlen(MULTIPART_MIME)) == 0){
 				/* We have multiple messages cramped inside this
@@ -88,6 +90,7 @@ struct email_t* mail_from_text(char* message, size_t length,
 							(int)bd_len, bd);
 					}
 				}
+				/* Expands the mail message to multiple ones */
 				unravel_multipart_mail(mail);
 
 			}
