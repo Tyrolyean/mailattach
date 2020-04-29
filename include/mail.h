@@ -37,8 +37,17 @@ struct email_t{
 	 * is basically insane by this point...
 	 */
 	bool is_multipart;
+
+	/* The boundary only needs to be defined if this is a multipart message 
+	 */
 	size_t boundary_len;
 	char* boundary;
+	
+	/* The content type tells us the MIME type of this message part. May not
+	 * be specified, so don't assume it is here! */
+	size_t ct_len;
+	char* content_type;
+	
 	size_t submes_cnt;
 	struct email_t** submes;
 	struct email_t* parent;

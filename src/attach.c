@@ -44,6 +44,8 @@ struct email_t* mail_from_text(char* message, size_t length,
 	mail->is_multipart = false;
 	mail->boundary = NULL;
 	mail->boundary_len = 0;
+	mail->ct_len = 0;
+	mail->content_type = 0;
 	mail->parent = parent_mail;
 	
 	redetect_body_head(mail);
@@ -51,7 +53,7 @@ struct email_t* mail_from_text(char* message, size_t length,
 	if(cont_type == NULL){
 		/* Halleluja, I've got nothing to do! WOO */
 		if(verbose){
-			printf("Mail found without content type!");
+			printf("Mail found without content type!\n");
 		}
 		mail->is_multipart = false;
 		return mail;
@@ -60,9 +62,11 @@ struct email_t* mail_from_text(char* message, size_t length,
 		char * mime_type = get_value_from_key(&value_length, 
 			cont_type - mail->message, mail);
 		if(mime_type != NULL){
+			mail->ct_len = value_length;
+			mail->content_type = mime_type;
 			if(verbose){
 				printf("Found content type: %.*s\n",
-					value_length, mime_type);
+					(int)value_length, mime_type);
 			}
 			if(strncasecmp(mime_type, MULTIPART_MIME, 
 				strlen(MULTIPART_MIME)) == 0){
@@ -224,8 +228,9 @@ void print_mail_structure(struct email_t *email, unsigned int level){
 			print_mail_structure(email->submes[i], level+1);
 		}
 	}else{
-		printf("Final message with length %lu\n", 
-			email->message_length);
+		printf("Final message with length %lu and type [%.*s] \n", 
+			email->message_length, (int)email->ct_len, 
+			email->content_type);
 	}
 
 	return;
