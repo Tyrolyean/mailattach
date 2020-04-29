@@ -1,5 +1,5 @@
 /*
- * file.h - File writing functionality
+ * file.c - File writing functionality
  * The author licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -15,11 +15,22 @@
  * under the License.
  */
 
-#ifndef FILE_H
-#define FILE_H
+#include "file.h"
+#include "config.h"
 
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-
+/* Generate a safe directory name to store ONE emails files into. This is
+ * done to prevent someone from guessing the directory names. THe first part
+ * is the date in ISO format, in case you want to have a shell script cleaning
+ * the directory every once in a while.
+ */
 char* generate_safe_dirname(){
 	
 	/* Get time */
@@ -30,15 +41,40 @@ char* generate_safe_dirname(){
 
 #define TIME_LEN 30
         char datestr[TIME_LEN];
-	if(datestr == NULL){
-		return NULL;
-	}
+	memset(datestr, 0, TIME_LEN);
         strftime(datestr, TIME_LEN, "%FT%T%z", info);
-	
-	
+
+	/* Get data from urandom to be  secure. I mean from what I
+	 * know it should be, but I'm not a crypto expert. If you have doubts
+	 * and know how I should do that, PLEASE TELL ME! The man pages told me
+	 * to do so!
+	 */
+	int randie[3];
+	int random_fd = open("/dev/random", O_RDONLY);
+	if (random_fd < 0){
+		perror("Failed to open /dev/urandom");
+		return NULL;
+	}else{
+	    size_t randie_len = 0;
+	    while (randie_len < sizeof(randie)){
+		ssize_t result = read(random_fd, randie + randie_len, sizeof(randie) - randie_len);
+		if (result < 0){
+
+			perror("Failed to read from /dev/urandom");
+			close(random_fd);
+			return NULL;
+		}
+		randie_len += result;
+	    }
+	    close(random_fd);
+	}
+	size_t dir_len = TIME_LEN + 50 + strlen(directory);
+	char * dir_id = malloc(dir_len+1);
+	memset(dir_id, 0, dir_len+1 );
+
+	snprintf(dir_id,dir_len, "%s/%s%i%i%i/",directory, datestr,
+		randie[0], randie[1], randie[2]);
 #undef TIME_LEN
-
-
+	return dir_id;
 }
 
-#endif /* FILE_H */

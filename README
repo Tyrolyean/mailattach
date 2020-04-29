@@ -27,7 +27,8 @@ You can specify the following command line options:
 	The outgoing smtp port/the port to which mail ist passed through.
 
 --directory -d
-	The directory inside of which the attachments will be stored in.
+	The directory inside of which the attachments will be stored in. Please
+	DON'T specify a / at the end!
 
 --url -u
 	The base which should point to the same location as the directory does,

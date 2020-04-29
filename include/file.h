@@ -18,27 +18,6 @@
 #ifndef FILE_H
 #define FILE_H
 
-
-
-char* generate_safe_dirname(){
-	
-	/* Get time */
-        time_t rawtime;
-        struct tm *info;
-        time( &rawtime );
-        info = localtime( &rawtime );
-
-#define TIME_LEN 30
-        char datestr[TIME_LEN];
-	if(datestr == NULL){
-		return NULL;
-	}
-        strftime(datestr, TIME_LEN, "%FT%T%z", info);
-	
-	
-#undef TIME_LEN
-
-
-}
+char* generate_safe_dirname();
 
 #endif /* FILE_H */

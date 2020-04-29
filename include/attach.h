@@ -32,4 +32,6 @@ void free_submails(struct email_t* mail);
 
 char* attach_files(char* message, size_t len);
 
+int replace_base64_files(struct email_t* mail, const char* dirname);
+
 #endif /* ATTACH_H */

@@ -21,6 +21,7 @@
 #include "config.h"
 #include "mail.h"
 #include "tools.h"
+#include "file.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -283,7 +284,21 @@ char* attach_files(char* message, size_t len){
 	}
 
 	/* Now we can start the real work! */
+	const char* storage_dir = generate_safe_dirname();
+	if(storage_dir == NULL){
+		fprintf(stderr,"Failed to get mail storage directory!\n");
+		goto finish;
+	}
+	if(verbose){
+		printf("Storing mail messages into directory [%s]\n",
+			storage_dir);
+	}
+	if(replace_base64_files(email, storage_dir) < 0){
+		fprintf(stderr, "Failed to store base64 messages!\n");
+		goto finish;
+	}
 	
+
 	/* Announce our presence via header */
 	if(append_header(email,"X-Mailattached", instance_id) < 0){
 		fprintf(stderr, "Failed to attach header!\n");
@@ -297,3 +312,24 @@ finish:
 	return mess;
 }
 
+/* This function RECURSIVELY replaces ALL base 64 encoded messages above the
+ * threshold set in the config file with links to that file in the HTML format.
+ * Call this function with the mail ROOT object if you want to replace all
+ * base64 files, or only one when you want to replace only one.
+ */
+int replace_base64_files(struct email_t* mail, const char* dirname){
+
+	if(mail->is_multipart){
+	
+		for(size_t i = 0; i < mail->submes_cnt; i++){
+			if(replace_base64_files(mail->submes[i], dirname) < 0){
+				return -1;
+			}
+		}
+		return 0;
+
+	}
+
+
+	return 0;
+}

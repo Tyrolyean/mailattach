@@ -13,7 +13,7 @@ SRCDIR := $(CWD)/src
 INCLUDEDIR := $(CWD)/include
 
 # flas
-CFLAGS := -O2 -I$(INCLUDEDIR) -Wall -Wextra
+CFLAGS := -O2 -I$(INCLUDEDIR) -Wall -Wextra -Wpedantic
 LDFLAGS := -pthread
 
 # target files
