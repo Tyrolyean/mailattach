@@ -57,6 +57,10 @@ struct email_t* mail_from_text(char* message, size_t length,
 		char * mime_type = get_value_from_key(&value_length, 
 			cont_type - mail->message, mail);
 		if(mime_type != NULL){
+			if(verbose){
+				printf("Found content type: %.*s\n",
+					value_length, mime_type);
+			}
 			if(strncasecmp(mime_type, MULTIPART_MIME, 
 				strlen(MULTIPART_MIME)) == 0){
 				/* We have multiple messages cramped inside this
@@ -104,14 +108,13 @@ void redetect_body_head(struct email_t* mail){
 		}
 	}
 
-	/* In that case we only have a body and no header, or something along
-	 * those lines... In any case, if postfix delivers that to us, something
-	 * is probably wrong!
+	/* Really this is something that SHOULD NOT HAPPEN during transport, but
+	 * enigmail produces a weirdly formatted signing here which has ONLY a
+	 * header and no body. So we need that for multipart messages.
 	 */
 
 	if(body_start == NULL) {
-		fprintf(stderr, "Received message without header!\n");
-		mail->header_len = 0;
+		mail->header_len = mail->message_length;
 		mail->body_offset = 0;
 		return;
 	}
@@ -242,12 +245,12 @@ char* attach_files(char* message, size_t len){
 	}
 	/* Check if mails are signed/encrypted, and abort if nescessary */
 	if(abort_on_pgp && detect_pgp(email)){
-		printf("PGP detected, aborting...");
+		printf("PGP detected, aborting...\n");
 		goto finish;
 	}
 	/* Check if mails are signed/encrypted, and abort if nescessary */
 	if(abort_on_dkim && detect_dkim(email)){
-		printf("DKIM signature detected, aborting...");
+		printf("DKIM signature detected, aborting...\n");
 		goto finish;
 	}
 
