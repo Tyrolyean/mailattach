@@ -23,7 +23,8 @@
 
 #include "mail.h"
 
-struct email_t* mail_from_text(char* message, size_t length);
+struct email_t* mail_from_text(char* message, size_t length, 
+	struct email_t* parent_mail);
 void redetect_body_head(struct email_t* mail);
 
 void unravel_multipart_mail(struct email_t* mail);

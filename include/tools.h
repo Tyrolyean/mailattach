@@ -31,4 +31,7 @@ char* get_value_from_key(size_t* val_len, size_t key_offset,
 
 char* get_multipart_boundary(char* content_type, size_t content_len,
 	size_t* boundary_len);
+
+const char* get_next_line(const char* message, size_t len);
+const char* get_prev_line(const char* message, size_t len_neg);
 #endif /* TOOLS_H */

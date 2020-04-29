@@ -150,3 +150,34 @@ char* get_multipart_boundary(char* content_type, size_t content_len,
 	*boundary_len = 0;
 	return NULL;
 }
+
+/* Returns a character pointer to the first character of the next line. */
+const char* get_next_line(const char* message, size_t len){
+	for(size_t i = 0; i < len-1; i++){
+		if(message[i] == '\n'){
+			return &message[i+1];
+		}
+	}
+
+	return NULL;
+}
+
+/* Returns a character pointer to the last character of the last line which was 
+ * NOT part of a cr lf. The len_neg attribute specifies how far we can go to
+ * the left.
+ */
+const char* get_prev_line(const char* message, size_t len_neg){
+	for(size_t i = 0; i < len_neg-2; i++){
+		if(message[-i] == '\n'){
+			if(message[-(i+1)] == '\r'){
+				return &message[i+2];
+
+			}else{
+				return &message[i+2];
+
+			}
+		}
+	}
+
+	return NULL;
+}

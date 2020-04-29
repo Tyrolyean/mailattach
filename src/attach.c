@@ -28,7 +28,12 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-struct email_t* mail_from_text(char* message, size_t length){
+/* Generates an email struct from the given eml text. If the content is
+ * multipart, it will be slit up into several email_ts. This expansion is done
+ * recursively. For the root message set parent_mail to NULL
+ */
+struct email_t* mail_from_text(char* message, size_t length, 
+	struct email_t* parent_mail){
 	
 	struct email_t* mail = malloc(sizeof(struct email_t));;
 	memset(mail, 0, sizeof(struct email_t));
@@ -39,6 +44,7 @@ struct email_t* mail_from_text(char* message, size_t length){
 	mail->is_multipart = false;
 	mail->boundary = NULL;
 	mail->boundary_len = 0;
+	mail->parent = parent_mail;
 	
 	redetect_body_head(mail);
 	char* cont_type = search_header_key(mail, "Content-Type");
@@ -157,6 +163,28 @@ void unravel_multipart_mail(struct email_t* mail){
 			"submessages\n", mb_cnt, mb_cnt-1);
 	}
 	
+	for(ssize_t i = 0; i < ((ssize_t)mb_cnt)-1; i++){
+		const char * begin_pointer = get_next_line(mail_boundarys[i], 
+			mail->message_length - 
+			(mail->message - mail_boundarys[i]));
+
+		if(begin_pointer == NULL){
+			continue;
+		}
+		
+		const char* end_pointer = get_prev_line(mail_boundarys[i+1],
+			(mail_boundarys[i+1] - begin_pointer));
+
+		if(end_pointer == NULL){
+			continue;
+		}
+		struct email_t *submail = mail_from_text((char*)begin_pointer, 
+			end_pointer - begin_pointer, mail);
+		mail->submes = realloc(mail->submes, ++mail->submes_cnt * 
+			(sizeof(struct email_t)));
+		mail->submes[mail->submes_cnt - 1] = submail;
+	}
+	
 	free(mail_boundarys);
 	free(boundary);
 	return;
@@ -177,6 +205,27 @@ void free_submails(struct email_t* mail){
 
 }
 
+void print_mail_structure(struct email_t *email, unsigned int level){
+	
+	for(unsigned int i = 0; i < level; i++){
+		printf("  ");
+	}
+	
+	if(email->is_multipart){
+		printf("Multipart Message with %lu submessages:\n", 
+			email->submes_cnt);
+		for(size_t i = 0; i < email->submes_cnt; i++){
+			print_mail_structure(email->submes[i], level+1);
+		}
+	}else{
+		printf("Final message with length %lu\n", 
+			email->message_length);
+	}
+
+	return;
+
+}
+
 /* Message is required to be a null terminated string, length is the mail body.
  * One may leave something behind the body. len is without the '\0'
  * Attempts to replace files inside the email with links to it on a webserver
@@ -184,8 +233,13 @@ void free_submails(struct email_t* mail){
 char* attach_files(char* message, size_t len){
 	
 	char* mess;
-	struct email_t *email = mail_from_text(message,len);
-	
+	struct email_t *email = mail_from_text(message,len, NULL);
+	if(email == NULL){
+		return NULL;
+	}
+	if(verbose){
+		print_mail_structure(email, 0);
+	}
 	/* Check if mails are signed/encrypted, and abort if nescessary */
 	if(abort_on_pgp && detect_pgp(email)){
 		printf("PGP detected, aborting...");

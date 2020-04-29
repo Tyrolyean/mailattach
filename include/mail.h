@@ -41,6 +41,7 @@ struct email_t{
 	char* boundary;
 	size_t submes_cnt;
 	struct email_t** submes;
+	struct email_t* parent;
 };
 
 int append_header(struct email_t* mail, const char* key, const char* value);
