@@ -225,14 +225,18 @@ void print_mail_structure(struct email_t *email, unsigned int level){
 		printf("  ");
 	}
 	
+	if(email->base64_encoded){
+		printf("Base64 encoded ");
+	}
+	
 	if(email->is_multipart){
-		printf("Multipart Message with %lu submessages:\n", 
+		printf("multipart Message with %lu submessages:\n", 
 			email->submes_cnt);
 		for(size_t i = 0; i < email->submes_cnt; i++){
 			print_mail_structure(email->submes[i], level+1);
 		}
 	}else{
-		printf("Final message with length %lu and type [%.*s] \n", 
+		printf("final message with length %lu and type [%.*s] \n", 
 			email->message_length, (int)email->ct_len, 
 			email->content_type);
 	}
