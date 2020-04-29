@@ -77,8 +77,9 @@ struct email_t* mail_from_text(char* message, size_t length,
 				 */
 				mail->is_multipart = true;
 				 size_t bd_len = 0;
-				char* bd = get_multipart_boundary(
-					mime_type, value_length, &bd_len);
+				char* bd = get_value_equals(
+					mime_type, value_length, &bd_len, 
+					"boundary");
 				
 				if(bd != NULL){
 					mail->boundary = bd;

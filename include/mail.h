@@ -49,6 +49,11 @@ struct email_t{
 	size_t ct_len;
 	char* content_type;
 	
+	/* NOTICE: the boundary, content_type and message fields may be updated
+	 * when the message of the root object is modified. See the 
+	 * propagate_root_pointer function for further information
+	 */
+
 	size_t submes_cnt;
 	struct email_t** submes;
 	struct email_t* parent;
@@ -63,6 +68,9 @@ struct email_t* get_root_mail(struct email_t* mail);
 void propagate_insert_delete(struct email_t* mail, char* change_p,  
 	ssize_t change);
 void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p);
+
+struct type_file_info_t{
+};
 
 #define MULTIPART_MIME "multipart/"
 #define BASE64_ENC "base64"

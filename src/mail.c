@@ -168,3 +168,5 @@ void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p){
 	
 	return;
 }
+
+

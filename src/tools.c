@@ -119,14 +119,14 @@ char* get_value_from_key(size_t* val_len, size_t key_offset,
 	return val;
 }
 
-char* get_multipart_boundary(char* content_type, size_t content_len, 
-	size_t* boundary_len){
+char* get_value_equals(char* content_type, size_t content_len, 
+	size_t* boundary_len, char* key){
 
 	if(content_type == NULL || boundary_len == NULL){
 		return NULL;
 	}
 	
-	char* bd = "boundary";
+	char* bd = key;
 	char* boundary_begin = NULL;
 	size_t bd_len = strlen(bd);
 	long boundary_offset = -1;
