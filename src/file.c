@@ -17,6 +17,7 @@
 
 #include "file.h"
 #include "config.h"
+#include "base64.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -78,3 +79,82 @@ char* generate_safe_dirname(){
 	return dir_id;
 }
 
+int base64_decode_file(const char* directory, const struct email_t* mail){
+	
+	if(!mail->base64_encoded){
+		return -1;
+	}
+
+	if(directory == NULL || mail == NULL || mail->file_info.name == NULL){
+
+		/* I don't know how I should call that file! */
+		return 0;
+	}
+	size_t dec_len = 0;
+	unsigned char* decoded =  base64_decode(
+		((unsigned char*)mail->message+mail->body_offset),
+		(mail->message_length-mail->body_offset),
+		&dec_len);
+	
+	if(decoded == NULL){
+		fprintf(stderr, "Failed to decode base64 message\n");
+		return -1;
+	}
+
+
+	size_t fn_len = strlen(mail->file_info.name) + strlen(directory) + 1;
+	
+	char* filename = malloc(fn_len);
+	if(filename == NULL){
+		free(decoded);
+		return -1;
+	}
+
+	memset(filename, 0, fn_len);
+	strcat(filename, directory);
+	strcat(filename, mail->file_info.name);
+
+	bool exists = false;
+	for(size_t i = 0; i < 10; i++){
+		exists = file_exists(filename);
+		if(exists){
+			free(filename);
+			fn_len = strlen(mail->file_info.name) + 
+				strlen(directory) + 20;
+			filename = malloc(fn_len);
+			snprintf(filename, fn_len, "%s%i-%s",directory,
+				rand(), mail->file_info.name);
+		}
+	}
+	if(exists){
+		/* What?*/
+		free(filename);
+		free(decoded);
+		return -1;
+	}
+
+	FILE* outfile = fopen(filename, "w+");
+	if(outfile == NULL){
+		perror("Failed to open base64 out file");
+		free(filename);
+		free(decoded);
+		return -1;
+	}
+
+	fwrite(decoded, dec_len, 1, outfile);
+	fclose(outfile);
+	free(filename);
+	free(decoded);
+	return 0;
+	
+}
+
+bool file_exists(const char* filename){
+	struct stat buffer;
+	int exist = stat(filename,&buffer);
+	if(exist >= 0){
+		return true;
+	} else{
+		return false;
+	}
+}

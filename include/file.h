@@ -18,6 +18,14 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include "mail.h"
+
+#include <stdbool.h>
+
 char* generate_safe_dirname();
+
+int base64_decode_file(const char* directory, const struct email_t* mail);
+
+bool file_exists(const char* filename);
 
 #endif /* FILE_H */

@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 /* Generates an email struct from the given eml text. If the content is
  * multipart, it will be slit up into several email_ts. This expansion is done
@@ -284,7 +285,7 @@ char* attach_files(char* message, size_t len){
 	}
 
 	/* Now we can start the real work! */
-	const char* storage_dir = generate_safe_dirname();
+	char* storage_dir = generate_safe_dirname();
 	if(storage_dir == NULL){
 		fprintf(stderr,"Failed to get mail storage directory!\n");
 		goto finish;
@@ -293,11 +294,17 @@ char* attach_files(char* message, size_t len){
 		printf("Storing mail messages into directory [%s]\n",
 			storage_dir);
 	}
+	if(mkdir(storage_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0){
+		perror("Failed to create storage directory!");
+		goto finish;
+
+	}
 	if(replace_base64_files(email, storage_dir) < 0){
 		fprintf(stderr, "Failed to store base64 messages!\n");
 		goto finish;
 	}
 	
+	free(storage_dir);
 
 	/* Announce our presence via header */
 	if(append_header(email,"X-Mailattached", instance_id) < 0){
@@ -329,7 +336,16 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		return 0;
 
 	}
-
+	if(!mail->base64_encoded){
+		return 0;
+	}
+	
+	if(base64_decode_file(dirname, mail) < 0){
+		fprintf(stderr, "Failed to decode base64 file\n!");
+		return -1;
+	}
+	/* Replace the mail message with some html text TODO */
 
 	return 0;
 }
+
