@@ -44,6 +44,7 @@ struct email_t mail_from_text(char* message, size_t length){
 		mail.is_multipart = false;
 		return mail;
 	}else{
+		printf("Content Type set: %.*s",15, cont_type);
 		size_t value_length = 0;
 		char * mime_type = get_value_from_key(&value_length, 
 			cont_type - mail.message, &mail);

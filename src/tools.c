@@ -85,6 +85,7 @@ char* get_value_from_key(size_t* val_len, size_t key_offset,
 	for(size_t i = key_offset; i < mail->header_len; i++){
 		if(mail->message[i] == ':'){
 			colon = i;
+			break;
 		}
 	}
 
