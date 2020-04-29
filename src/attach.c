@@ -20,6 +20,7 @@
 #include "detect.h"
 #include "config.h"
 #include "mail.h"
+#include "tools.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -33,8 +34,24 @@ struct email_t mail_from_text(char* message, size_t length){
 	memset(&mail, 0, sizeof(mail));
 	mail.message = message;
 	mail.message_length = length;
+	mail.submes_cnt = 0;
+	mail.submes = NULL;
 	
 	redetect_body_head(&mail);
+	char* cont_type = search_header_key(&mail, "Content-Type");
+	if(cont_type == NULL){
+		/* Halleluja, I've got nothing to do! WOO */
+		mail.is_multipart = false;
+		return mail;
+	}else{
+		size_t value_length = 0;
+		char * mime_type = get_value_from_key(&value_length, 
+			cont_type - mail.message, &mail);
+		if(mime_type != NULL){
+			printf("Found message mime type: %.*s\n", 
+				(int)value_length, mime_type);
+		}
+	}
 
 	return mail;
 }

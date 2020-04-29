@@ -18,10 +18,15 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include "mail.h"
 #include <stddef.h>
 
 char* insert_string(char * destination, const char* source, 
 	size_t dest_orig_len, size_t offset);
 
+char* search_header_key(struct email_t* mail, const char* key);
+
+char* get_value_from_key(size_t* val_len, size_t key_offset, 
+	struct email_t* mail);
 
 #endif /* TOOLS_H */

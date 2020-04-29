@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 struct email_t{
 	char* message;
@@ -29,6 +30,10 @@ struct email_t{
 	 * there was no clear distinction between header and body...
 	 */
 	size_t header_len, body_offset, message_length;
+	bool is_multipart;
+	char* boundary;
+	size_t submes_cnt;
+	struct email_t** submes;
 };
 
 int append_header(struct email_t* mail, const char* key, const char* value);
