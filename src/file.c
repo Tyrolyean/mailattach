@@ -128,6 +128,7 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 	}
 	if(exists){
 		/* What?*/
+		fprintf(stderr,"Failed to create unique file name!\n");
 		free(filename);
 		free(decoded);
 		return -1;
@@ -139,6 +140,10 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 		free(filename);
 		free(decoded);
 		return -1;
+	}
+	if(verbose){
+		printf("Storing base64 file len %lu top [%s]\n",
+			dec_len, decoded);
 	}
 
 	fwrite(decoded, dec_len, 1, outfile);
