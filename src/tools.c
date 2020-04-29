@@ -59,8 +59,13 @@ char* search_header_key(struct email_t* mail, const char* key){
 	}
 	size_t keylen = strlen(key);
 
+	/* Also try that at the beginning of the message! */
+	if(strncasecmp(mail->message, key, keylen) == 0){
+		return mail->message;
+	}
+
 	for(size_t i = 0; (i+keylen) < mail->header_len; i++){
-		if(mail->message[i] == '\n' || i == 0){
+		if(mail->message[i] == '\n'){
 			if(strncasecmp(&mail->message[i+1], key, keylen) == 0){
 				return &mail->message[i+1];
 			}
