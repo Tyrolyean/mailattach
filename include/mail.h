@@ -39,4 +39,6 @@ struct email_t{
 int append_header(struct email_t* mail, const char* key, const char* value);
 int append_to_header(struct email_t* mail, const char* pair);
 
+#define MULTIPART_MIME "multipart/"
+
 #endif /* MAIL_H */

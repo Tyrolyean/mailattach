@@ -48,8 +48,21 @@ struct email_t mail_from_text(char* message, size_t length){
 		char * mime_type = get_value_from_key(&value_length, 
 			cont_type - mail.message, &mail);
 		if(mime_type != NULL){
-			printf("Found message mime type: [%.*s]\n",
-				(int)value_length, mime_type);
+			if(strncasecmp(mime_type, MULTIPART_MIME, 
+				strlen(MULTIPART_MIME)) == 0){
+				/* We have multiple messages cramped inside this
+				 * one. Let's unravel em!
+				 */
+				 size_t bd_len = 0;
+				char* bd = get_multipart_boundary(
+					mime_type, value_length, &bd_len);
+				if(bd != NULL){
+					printf("Received boundary: [%.*s]\n",
+						(int)bd_len, bd);
+				}
+				unravel_multipart_mail(&mail, bd, bd_len);
+
+			}
 		}
 	}
 
@@ -91,6 +104,13 @@ void redetect_body_head(struct email_t* mail){
 	return;
 	
 	
+}
+
+void unravel_multipart_mail(struct email_t* mail, char* boundary, 
+	size_t boundary_len){
+
+	return;
+
 }
 
 /* Message is required to be a null terminated string, length is the mail body.

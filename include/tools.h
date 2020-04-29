@@ -29,4 +29,6 @@ char* search_header_key(struct email_t* mail, const char* key);
 char* get_value_from_key(size_t* val_len, size_t key_offset, 
 	struct email_t* mail);
 
+char* get_multipart_boundary(char* content_type, size_t content_len,
+	size_t* boundary_len);
 #endif /* TOOLS_H */

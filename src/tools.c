@@ -113,3 +113,40 @@ char* get_value_from_key(size_t* val_len, size_t key_offset,
 
 	return val;
 }
+
+char* get_multipart_boundary(char* content_type, size_t content_len, 
+	size_t* boundary_len){
+
+	if(content_type == NULL || boundary_len == NULL){
+		return NULL;
+	}
+	
+	char* bd = "boundary";
+	char* boundary_begin = NULL;
+	size_t bd_len = strlen(bd);
+	long boundary_offset = -1;
+
+	for(size_t i = 0; i < (content_len - bd_len);i++){
+		if(strncasecmp(&content_type[i], bd, bd_len) == 0){
+			boundary_offset = i+bd_len;
+			break;
+		}
+	}
+	
+	if(boundary_offset < 0){
+		*boundary_len = 0;
+		return NULL;
+	}
+	
+	for(size_t i = boundary_offset; i < content_len;i++){
+		if(content_type[i] == '"' && boundary_begin == NULL){
+			boundary_begin = &content_type[i+1];
+		}else  if(content_type[i] == '"'){
+			*boundary_len = &content_type[i] - boundary_begin ;
+			return boundary_begin;
+		}
+	}
+	
+	*boundary_len = 0;
+	return NULL;
+}
