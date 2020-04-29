@@ -92,7 +92,7 @@ char* get_value_from_key(size_t* val_len, size_t key_offset,
 	colon++;
 	char* val = NULL;
 	for(size_t i = colon; i < (mail->header_len-1); i++){
-		if(isalnum(mail->message[i])){
+		if(isalnum(mail->message[i]) && val == NULL){
 			val = &mail->message[i];
 		}
 
