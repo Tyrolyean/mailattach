@@ -98,6 +98,8 @@ struct email_t* mail_from_text(char* message, size_t length,
 		}
 	}
 	mail->base64_encoded = detect_base64(mail);
+	
+	mail->file_info = get_mime_file_info(mail);
 
 	return mail;
 }
@@ -237,9 +239,18 @@ void print_mail_structure(struct email_t *email, unsigned int level){
 			print_mail_structure(email->submes[i], level+1);
 		}
 	}else{
-		printf("final message with length %lu and type [%.*s] \n", 
-			email->message_length, (int)email->ct_len, 
-			email->content_type);
+		if( email->file_info.mime_type == NULL){
+	
+			printf("final message with length %lu and type "
+				"[%.*s] \n", 
+				email->message_length, (int)email->ct_len, 
+				email->content_type);
+		}else{
+			printf("final message with length %lu and type [%s] \n", 
+				email->message_length, 
+				email->file_info.mime_type);
+			
+		}
 	}
 
 	return;

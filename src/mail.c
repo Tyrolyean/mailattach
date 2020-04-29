@@ -168,5 +168,36 @@ void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p){
 	
 	return;
 }
+struct type_file_info_t get_mime_file_info(struct email_t* mail){
 
+	struct type_file_info_t fileinfo;
+	fileinfo.name = NULL;
+	fileinfo.mime_type = NULL;
+	
+	if(mail->content_type == NULL){
+		return fileinfo;
+	}
 
+	char* semic = strchr(mail->content_type, ';');
+	size_t mime_len = 0;
+	if(semic > (mail->content_type + mail->ct_len)){
+		mime_len = mail->ct_len;
+	}else{
+		mime_len = semic - mail->content_type;
+	}
+
+	fileinfo.mime_type = malloc(mime_len + 1);
+	memset(fileinfo.mime_type, 0, mime_len + 1);
+	memcpy(fileinfo.mime_type, mail->content_type, mime_len);
+	size_t filename_len = 0;
+	char* filename = get_value_equals(mail->content_type, mail->ct_len,
+		&filename_len, "name");
+	
+	if(filename != NULL){
+		fileinfo.name = malloc(filename_len + 1);
+		memset(fileinfo.name, 0, filename_len + 1);
+		memcpy(fileinfo.name, filename, filename_len);
+	}
+
+	return fileinfo;
+}

@@ -23,6 +23,11 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+struct type_file_info_t{
+	char* name;
+	char* mime_type;
+};
+
 struct email_t{
 	char* message;
 	/* From the below values you can say pretty much anything about the 
@@ -58,7 +63,10 @@ struct email_t{
 	struct email_t** submes;
 	struct email_t* parent;
 	bool base64_encoded;
+	struct type_file_info_t file_info;
 };
+
+
 
 int append_header(struct email_t* mail, const char* key, const char* value);
 int append_to_header(struct email_t* mail, const char* pair);
@@ -69,8 +77,7 @@ void propagate_insert_delete(struct email_t* mail, char* change_p,
 	ssize_t change);
 void propagate_root_pointer(struct email_t* mail, char* change_p, char* old_p);
 
-struct type_file_info_t{
-};
+struct type_file_info_t get_mime_file_info(struct email_t* mail);
 
 #define MULTIPART_MIME "multipart/"
 #define BASE64_ENC "base64"
