@@ -32,7 +32,7 @@ struct mail_recv_t{
 	size_t body_offs;
 	struct pollfd fds[2];
 	int n;
-	char buf[1000];
+	char buf[512000];
 
 };
 
