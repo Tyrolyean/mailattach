@@ -319,6 +319,40 @@ finish:
 	return mess;
 }
 
+/* This function returns the first message where it makes sense to append the
+ * attachment message to. To differentiate between text and html the mime type
+ * is sent along
+ */
+struct email_t* get_appendable_mail(struct email_t* mail, 
+	const char* mime_type){
+	
+	if(mail->is_multipart){
+		struct email_t* ret = NULL;
+		for(size_t i = 0; i < mail->submes_cnt; i++){
+			struct email_t* ret2 = 
+				get_appendable_mail(mail->submes[i], mime_type);
+				if(ret2 != NULL){
+					ret = ret2;
+				}
+		}
+		return ret;
+
+	}
+
+	if(mail->base64_encoded || mail->file_info.mime_type == NULL || 
+		mail->file_info.name != NULL){
+		return NULL;
+	}
+
+	if(strcasecmp(mail->file_info.mime_type, mime_type) == 0){
+		return mail;
+	}else{
+		return NULL;
+	}
+	
+
+}
+
 /* This function RECURSIVELY replaces ALL base 64 encoded messages above the
  * threshold set in the config file with links to that file in the HTML format.
  * Call this function with the mail ROOT object if you want to replace all
@@ -357,6 +391,15 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 
 		}
 
+	}
+	struct email_t* root = get_root_mail(mail);
+	if(root == NULL){
+		return -1;
+	}
+	struct email_t* txt_app = get_appendable_mail(root, "text/plain");
+	struct email_t* html_app = get_appendable_mail(root, "text/html");
+	if(txt_app == NULL && html_app == NULL){
+		return -1;
 	}
 	char* chosen_filename = NULL;
 	if(mail->base64_encoded){
@@ -424,8 +467,14 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		mail->file_info.mime_type, 
 		url_base, chosen_filename+directory_len);
 	
-	printf(html_buffer);
-	printf(text_buffer);
+	
+	if(txt_app != NULL){
+		 append_to_body(txt_app, text_buffer);
+	}
+	if(html_app != NULL){
+		 append_to_body(html_app, html_buffer);
+		
+	}
 	
 	free(html_buffer);
 	free(text_buffer);

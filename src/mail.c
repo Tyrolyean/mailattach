@@ -82,6 +82,44 @@ int append_to_header(struct email_t* mail, const char* pair){
 	propagate_root_pointer(root, new_root, old_root);
 	propagate_insert_delete(root, root->message+root_offset, 
 		strlen(buffer));
+
+	mail->header_len += strlen(buffer);
+	mail->body_offset += strlen(buffer);
+	
+	free(buffer);
+	redetect_body_head(mail);
+
+	return 0;
+
+}
+
+/* Append the string text DIRECTLY to the end of the body of the message mail*/
+int append_to_body(struct email_t* mail, const char* text){
+
+	if(text == NULL || mail == NULL){
+		return -1;
+	}
+
+	char *buffer = malloc(strlen(text) + 3);
+	memset(buffer, 0, strlen(text) + 3);
+	buffer[0] = '\r';
+	buffer[1] = '\n';
+	strcat(buffer, text);
+	struct email_t* root = get_root_mail(mail);
+	size_t root_offset = mail->message_length + 
+		(mail->message - root->message);
+
+	char* old_root = root->message;
+	char * new_root = insert_string(root->message, buffer, 
+		root->message_length, root_offset);
+	if(new_root == NULL){
+		return -1;
+	}	
+	propagate_size_change(mail, strlen(buffer));	
+
+	propagate_root_pointer(root, new_root, old_root);
+	propagate_insert_delete(root, root->message+root_offset, 
+		strlen(buffer));
 	
 	free(buffer);
 	redetect_body_head(mail);
