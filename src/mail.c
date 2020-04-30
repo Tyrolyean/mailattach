@@ -98,11 +98,16 @@ int remove_mail(struct email_t* mail){
 	
 	struct email_t* parent = mail->parent;
 	bool found = false;
+	
+	struct email_t * followup = NULL;
 	for(size_t i = 0; i < parent->submes_cnt; i++){
 		
 		if(parent->submes[i] == mail){
 			/* Remove ourselfs from the parent */
 			found = true;
+			if(i+1 < parent->submes_cnt){
+				followup = parent->submes[i+1];
+			}
 		}
 		
 		if(found && (i+1 < parent->submes_cnt)){
@@ -116,24 +121,11 @@ int remove_mail(struct email_t* mail){
 	}
 
 	parent->submes_cnt--;
-	
-	/* Find the boundary that should come after our content */
-	
-	char* boundary = malloc(parent->boundary_len+1);
-	memset(boundary, 0, parent->boundary_len+1);
-	memcpy(boundary,parent->boundary, parent->boundary_len);
-
-	char * after_boundary =  
-		strstr(mail->message+mail->message_length, boundary);
-	free(boundary);
-	if(after_boundary == NULL){
-		fprintf(stderr, "Unable to find boundary!\n");
-		return -1;
-	}
-	const char * end = get_next_line(after_boundary, 
-		parent->message_length-(after_boundary - parent->message));
-	if(end == NULL){
+	char* end = NULL;
+	if(followup == NULL){
 		end = parent->message + parent->message_length;
+	}else{
+		end = followup->message - 1;
 	}
 
 	size_t remove_len = mail->message - end;
