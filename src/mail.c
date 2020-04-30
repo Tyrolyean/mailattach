@@ -137,8 +137,11 @@ int remove_mail(struct email_t* mail){
 	
 	propagate_size_change(mail, -remove_len);
 	
-	remove_string(root->message, root->message_length, 
-		remove_offset, remove_len);
+	if(!remove_string(root->message, root->message_length, 
+		remove_offset, remove_len)){
+		fprintf(stderr, "Unwilling to remove string from message!\n");
+		return -1;
+	}
 	
 	propagate_insert_delete(root, root->message+remove_offset, -remove_len);
 	

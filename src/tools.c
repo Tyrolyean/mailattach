@@ -52,13 +52,16 @@ char* insert_string(char * destination, const char* source,
 /* Takes a string string and removes from offset INCLUDING the character there
  * the following remove bytes. Len is without the NULL-termination
  */
-void remove_string(char * string, size_t len, size_t offset, size_t remove){
+bool remove_string(char * root, size_t len, size_t offset, size_t remove){
 
+	if(remove+offset > len || root == NULL){
+		return false;
+	}
 	
-	memmove(string+offset, string+offset+remove, len - (offset+remove));
-	string[len-remove] = 0;
+	memmove(root+offset, root+offset+remove, len - (offset+remove));
+	root[len-remove] = 0;
 
-	return;	
+	return true;	
 	
 }
 

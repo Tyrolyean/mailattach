@@ -20,11 +20,12 @@
 
 #include "mail.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 char* insert_string(char * destination, const char* source, 
 	size_t dest_orig_len, size_t offset);
 
-void remove_string(char * string, size_t len, size_t offset, size_t remove);
+bool remove_string(char * root, size_t len, size_t offset, size_t remove);
 
 char* search_header_key(const struct email_t* mail, const char* key);
 
