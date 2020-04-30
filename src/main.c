@@ -36,13 +36,14 @@ int main(int argc, char* argv[]){
 			{"out-port",	required_argument, 0, 'o'},
 			{"instance-id",	required_argument, 0, 'n'},
 			{"directory",	required_argument, 0, 'd'},
+			{"minfilesize",	required_argument, 0, 's'},
 			{"url",		required_argument, 0, 'u'},
 			{0, 0, 0, 0}
 		};
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long (argc, argv, "n:i:o:d:u:",
+		c = getopt_long (argc, argv, "n:i:o:d:u:s:",
 			       long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -70,6 +71,9 @@ int main(int argc, char* argv[]){
 			break;
 		case 'u':
 			url_base = optarg;
+			break;
+		case 's':
+			min_filesize = atol(optarg);
 			break;
 
 		case '?':
@@ -119,6 +123,9 @@ int main(int argc, char* argv[]){
 		
 		printf("Only saving bas64 encoded files: %s\n",
 			only_base64 ? "true":"false");
+		
+		printf("Min filesize to store messages: %liB\n",
+			min_filesize);
 
 		
 		printf("Placing files into [%s] linked by [%s]\n", directory,

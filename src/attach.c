@@ -342,6 +342,10 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 	if(mail->file_info.name == NULL){
 		return 0;
 	}
+	if((mail->message_length - mail->body_offset) < (unsigned long)
+		min_filesize ){
+		return 0;
+	}
 	
 	if(mail->base64_encoded){
 		if(base64_decode_file(dirname, mail) < 0){

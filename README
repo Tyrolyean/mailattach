@@ -39,6 +39,17 @@ You can specify the following command line options:
 	webserver! 
 	That WILL BE a security riks!
 
+--other-base64 --only-base64
+	Decides wether ONLY base64 encoded files should be removed from the
+	actual mail, or ALL files.
+
+--minfilesize -s
+	The minimum file size which a file has to have before beeing attached.
+	Thissize is before base64 decoding if nescessary. Size is in bytes,
+	ONLY bytes. Do NOT prefix a M or K, it will not be parsed! Defaults to
+	500Kb. If 0 is specified, all files will be attached. A negative value
+	effectively disables us.
+
 HOWTO
 
 We essentially are MITM sniffing your email traffic and playing proxy from your

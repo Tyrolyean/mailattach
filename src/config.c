@@ -28,3 +28,4 @@ char* directory = NULL;
 char* url_base = NULL;
 
 
+long min_filesize= 1024*512;

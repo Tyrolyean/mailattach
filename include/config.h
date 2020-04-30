@@ -33,5 +33,6 @@ extern int verbose;
 extern char* directory;
 extern char* url_base;
 
+extern long min_filesize;
 
 #endif /* CONFIG_H */
