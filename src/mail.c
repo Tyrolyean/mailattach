@@ -152,7 +152,7 @@ int remove_mail(struct email_t* mail){
 	
 
 	free_submails(mail);
-	
+	free(mail);
 	return 0;
 
 }
