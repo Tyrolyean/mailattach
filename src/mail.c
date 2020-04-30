@@ -127,19 +127,22 @@ int remove_mail(struct email_t* mail){
 	}else{
 		end = followup->message - 1;
 	}
-
-	size_t remove_len = end - mail->message;
+	
 	struct email_t *root = get_root_mail(mail);
 	if(root == NULL){
 		return -1;
 	}
+
+	size_t remove_len = end - mail->message;
 	size_t remove_offset =  mail->message - root->message;
 	
 	propagate_size_change(mail, -remove_len);
 	
 	if(!remove_string(root->message, root->message_length, 
 		remove_offset, remove_len)){
-		fprintf(stderr, "Unwilling to remove string from message!\n");
+		fprintf(stderr, "Unwilling to remove string from message at "
+			"offset %lu with len %lu!\n", remove_offset, 
+			remove_len);
 		return -1;
 	}
 	
