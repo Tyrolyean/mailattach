@@ -150,9 +150,6 @@ int remove_mail(struct email_t* mail){
 	
 	propagate_insert_delete(root, root->message+remove_offset, -remove_len);
 	
-
-	free_submails(mail);
-	free(mail);
 	return 0;
 
 }

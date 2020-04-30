@@ -297,12 +297,8 @@ char* attach_files(char* message, size_t len){
 		printf("Storing mail messages into directory [%s]\n",
 			storage_dir);
 	}
-	if(mkdir(storage_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0){
-		perror("Failed to create storage directory!");
-		goto finish;
-
-	}
-	if(replace_base64_files(email, storage_dir) < 0){
+	bool dir_cre = false;
+	if(replace_files(email, storage_dir, &dir_cre) < 0){
 		fprintf(stderr, "Failed to store base64 messages!\n");
 		goto finish;
 	}
@@ -325,14 +321,17 @@ finish:
 /* This function RECURSIVELY replaces ALL base 64 encoded messages above the
  * threshold set in the config file with links to that file in the HTML format.
  * Call this function with the mail ROOT object if you want to replace all
- * base64 files, or only one when you want to replace only one.
+ * base64 files, or only one when you want to replace only one. Created is a
+ * boolean wether the directory to store files has already been created.
  */
-int replace_base64_files(struct email_t* mail, const char* dirname){
+int replace_files(struct email_t* mail, const char* dirname, bool* created){
 
 	if(mail->is_multipart){
 	
 		for(size_t i = 0; i < mail->submes_cnt; i++){
-			if(replace_base64_files(mail->submes[i], dirname) < 0){
+			if(replace_files(mail->submes[i], dirname, created) 
+				< 0){
+
 				return -1;
 			}
 		}
@@ -346,7 +345,17 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		min_filesize ){
 		return 0;
 	}
-	
+	if(!*created){
+		*created = true;
+		if(mkdir(directory, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) 
+			< 0){
+
+			perror("Failed to create storage directory!");
+			return -1;
+
+		}
+
+	}
 	if(mail->base64_encoded){
 		if(base64_decode_file(dirname, mail) < 0){
 			fprintf(stderr, "Failed to decode base64 file\n!");
@@ -362,7 +371,7 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		}
 
 	}
-	/* Replace the mail message with some html text TODO */
+	/* Insert a message telling you what has happened to the attachment */
 
 	/* Delete old attachment */
 	if(mail->parent != NULL){
@@ -371,6 +380,10 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 			return -1;
 		}
 	}
+	
+
+	free_submails(mail);
+	free(mail);
 	return 0;
 }
 
