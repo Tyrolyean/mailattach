@@ -49,6 +49,19 @@ char* insert_string(char * destination, const char* source,
 	
 }
 
+/* Takes a string string and removes from offset INCLUDING the character there
+ * the following remove bytes. Len is without the NULL-termination
+ */
+void remove_string(char * string, size_t len, size_t offset, size_t remove){
+
+	
+	memmove(string+offset, string+offset+remove, len - (offset+remove));
+	string[len-remove] = 0;
+
+	return;	
+	
+}
+
 /* Searches the given header for the key provided and, if found, returns the
  * pointer to that key NOT the value 
  */
@@ -185,4 +198,22 @@ const char* get_prev_line(const char* message, size_t len_neg){
 	}
 
 	return NULL;
+}
+
+/* Propagates a size change inside the body UP. This only  alters the complete
+ * BODY length, the header len remains untouched. A positive change tells that
+ * something was added, a negative one that something was removed. Call this
+ * from the object you modified.
+ */
+void propagate_size_change(struct email_t *mail, ssize_t change){
+	
+	if(mail == NULL){
+		return;
+	}
+	mail->message_length += change;
+	if(mail->parent != NULL){
+		propagate_size_change(mail->parent, change);
+	}
+
+	return;
 }

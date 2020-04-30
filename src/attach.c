@@ -358,9 +358,15 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		}
 
 	}
-	
 	/* Replace the mail message with some html text TODO */
 
+	/* Delete old attachment */
+	if(mail->parent != NULL){
+		if(remove_mail(mail) < 0){
+			fprintf(stderr, "Failed to remove old attachment!!\n");
+			return -1;
+		}
+	}
 	return 0;
 }
 

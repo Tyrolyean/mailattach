@@ -76,7 +76,7 @@ int append_to_header(struct email_t* mail, const char* pair){
 	if(new_root == NULL){
 		return -1;
 	}	
-	mail->message_length += strlen(buffer);	
+	propagate_size_change(mail, strlen(buffer));	
 
 	propagate_root_pointer(root, new_root, old_root);
 	propagate_insert_delete(root, root->message+root_offset, 
@@ -85,6 +85,60 @@ int append_to_header(struct email_t* mail, const char* pair){
 	free(buffer);
 	redetect_body_head(mail);
 
+	return 0;
+
+}
+
+int remove_mail(struct email_t* mail){
+	
+	if(mail == NULL || mail->parent == NULL || !mail->parent->is_multipart){
+		return -1;
+	}
+	
+	struct email_t* parent = mail->parent;
+	bool found = false;
+	for(size_t i = 0; i < parent->submes_cnt; i++){
+		
+		if(parent->submes[i] == mail){
+			/* Remove ourselfs from the parent */
+			found = true;
+		}
+		
+		if(found && (i+1 < parent->submes_cnt)){
+			parent->submes[i] = parent->submes[i+1];
+		}
+
+	}
+	if(!found){
+		return -1;
+	}
+
+	parent->submes_cnt--;
+	
+	/* Find the boundary that should come after our content */
+	char * after_boundary =  
+		strstr(mail->message+mail->message_length, parent->boundary);
+	if(after_boundary == NULL){
+		return -1;
+	}
+	const char * end = get_next_line(after_boundary, 
+		parent->message_length-(after_boundary - parent->message));
+	if(end == NULL){
+		end = parent->message + parent->message_length;
+	}
+
+	size_t remove_len = mail->message - end;
+	struct email_t *root = get_root_mail(mail);
+	if(root == NULL){
+		return -1;
+	}
+	size_t remove_offset =  mail->message - root->message;
+	remove_string(root->message, root->message_length, 
+		remove_offset, remove_len);
+	
+	propagate_size_change(mail, -remove_len);
+	propagate_insert_delete(root, mail->message+remove_offset, -remove_len);
+	
 	return 0;
 
 }

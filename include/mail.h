@@ -71,6 +71,8 @@ struct email_t{
 int append_header(struct email_t* mail, const char* key, const char* value);
 int append_to_header(struct email_t* mail, const char* pair);
 
+int remove_mail(struct email_t* mail);
+
 struct email_t* get_root_mail(struct email_t* mail);
 
 void propagate_insert_delete(struct email_t* mail, char* change_p,  
