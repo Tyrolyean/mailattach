@@ -136,15 +136,17 @@ int remove_mail(struct email_t* mail){
 	size_t remove_len = end - mail->message;
 	size_t remove_offset =  mail->message - root->message;
 	
-	propagate_size_change(mail, -remove_len);
 	
 	if(!remove_string(root->message, root->message_length, 
 		remove_offset, remove_len)){
 		fprintf(stderr, "Unwilling to remove string from message at "
-			"offset %lu with len %lu!\n", remove_offset, 
-			remove_len);
+			"offset %lu with len %lu total length is %lu!\n", 
+			remove_offset, 
+			remove_len,
+			root->message_length);
 		return -1;
 	}
+	propagate_size_change(mail, -remove_len);
 	
 	propagate_insert_delete(root, root->message+remove_offset, -remove_len);
 	
