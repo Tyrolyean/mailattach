@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
 			"interface\n",  listen_port, forward_port);
 
 		printf("Aborting on PGP signed/encrypted messages: %s\n",
-			abort_on_pgp ? "true":false);
+			abort_on_pgp ? "true" : "false");
 
 		printf("Aborting on DKIM signed messages: %s\n",
 			abort_on_dkim ? "true" : "false");
