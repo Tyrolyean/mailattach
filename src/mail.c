@@ -128,7 +128,7 @@ int remove_mail(struct email_t* mail){
 		end = followup->message - 1;
 	}
 
-	size_t remove_len = mail->message - end;
+	size_t remove_len = end - mail->message;
 	struct email_t *root = get_root_mail(mail);
 	if(root == NULL){
 		return -1;
