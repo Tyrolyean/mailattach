@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int append_header(struct email_t* mail, const char* key, const char* value){
 	
@@ -110,15 +111,23 @@ int remove_mail(struct email_t* mail){
 
 	}
 	if(!found){
+		fprintf(stderr, "Internal message not included in parent!\n");
 		return -1;
 	}
 
 	parent->submes_cnt--;
 	
 	/* Find the boundary that should come after our content */
+	
+	char* boundary = malloc(parent->boundary_len+1);
+	memset(boundary, 0, parent->boundary_len+1);
+	memcpy(boundary,parent->boundary, parent->boundary_len);
+
 	char * after_boundary =  
-		strstr(mail->message+mail->message_length, parent->boundary);
+		strstr(mail->message+mail->message_length, boundary);
+	free(boundary);
 	if(after_boundary == NULL){
+		fprintf(stderr, "Unable to find boundary!\n");
 		return -1;
 	}
 	const char * end = get_next_line(after_boundary, 
