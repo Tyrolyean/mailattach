@@ -348,8 +348,6 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	/* Create the directory for the file */
 	if(!(*created)){
 		*created = true;
-		fprintf(stderr, "Failed to create storage directory %s!",
-			dirname);
 		if(mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) 
 			< 0){
 
