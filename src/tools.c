@@ -189,6 +189,11 @@ char* get_value_equals(char* content_type, size_t content_len,
 
 		}
 	}
+	if(state == STATE_ALNUM){
+		*boundary_len = content_type+content_len - boundary_begin;
+		return boundary_begin;
+
+	}
 	*boundary_len = 0;
 	return NULL;
 }
