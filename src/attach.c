@@ -401,7 +401,7 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		mime_len = strlen(mail->file_info.mime_type);
 	}
 
-	size_t html_buffer_len = strlen(html_filler_pref) + 2*url_len + 50 +
+	size_t html_buffer_len = strlen(html_filler_pref) + 2*url_len + 100 +
 		mime_len + 2*strlen(mail->file_info.name);
 	
 	size_t text_buffer_len = strlen(html_filler_pref) + url_len + 50 +
