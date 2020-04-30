@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
 			instance_id);
 		
 		printf("Only saving bas64 encoded files: %s\n",
-			only_base64 ? "true":false);
+			only_base64 ? "true":"false");
 
 		
 		printf("Placing files into [%s] linked by [%s]\n", directory,
