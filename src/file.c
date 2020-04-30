@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/random.h>
 
 /* Generate a safe directory name to store ONE emails files into. This is
  * done to prevent someone from guessing the directory names. THe first part
@@ -51,24 +52,12 @@ char* generate_safe_dirname(){
 	 * to do so!
 	 */
 	int randie[3];
-	int random_fd = open("/dev/random", O_RDONLY);
-	if (random_fd < 0){
-		perror("Failed to open /dev/urandom");
+	
+	if(getrandom(randie, sizeof(randie), 0) <= 0){
+		perror("Failed to get random seed! Aborting");
 		return NULL;
-	}else{
-	    size_t randie_len = 0;
-	    while (randie_len < sizeof(randie)){
-		ssize_t result = read(random_fd, randie + randie_len, sizeof(randie) - randie_len);
-		if (result < 0){
-
-			perror("Failed to read from /dev/urandom");
-			close(random_fd);
-			return NULL;
-		}
-		randie_len += result;
-	    }
-	    close(random_fd);
 	}
+
 	size_t dir_len = TIME_LEN + 50 + strlen(directory);
 	char * dir_id = malloc(dir_len+1);
 	memset(dir_id, 0, dir_len+1 );
@@ -112,7 +101,7 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 int decode_file(const char* directory, const char * message, size_t len, 
 	struct type_file_info_t finf){
 
-	if(directory == NULL || message == NULL){
+	if(directory == NULL || message == NULL || finf.name == NULL){
 
 		/* I don't know how I should call that file! */
 		return 0;
