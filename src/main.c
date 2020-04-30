@@ -30,6 +30,8 @@ int main(int argc, char* argv[]){
 			{"noabort-dkim",no_argument, &abort_on_dkim,0},
 			{"verbose",	no_argument, &verbose,      1},
 			{"quiet",	no_argument, &verbose,      0},
+			{"only-base64",	no_argument, &only_base64,  1},
+			{"other-base64",no_argument, &only_base64,  0},
 			{"in-port",	required_argument, 0, 'i'},
 			{"out-port",	required_argument, 0, 'o'},
 			{"instance-id",	required_argument, 0, 'n'},
@@ -106,14 +108,18 @@ int main(int argc, char* argv[]){
 		printf("Incoming port: %u outgoing port: %u on loopback "
 			"interface\n",  listen_port, forward_port);
 
-		printf("Ignoring PGP signed/encrypted messages: %s\n",
+		printf("Aborting on PGP signed/encrypted messages: %s\n",
 			abort_on_pgp ? "true":false);
 
-		printf("Ignoring DKIM signed messages: %s\n",
+		printf("Aborting on DKIM signed messages: %s\n",
 			abort_on_dkim ? "true" : "false");
 		
 		printf("Instance id for messages: %s\n",
 			instance_id);
+		
+		printf("Only saving bas64 encoded files: %s\n",
+			only_base64 ? "true":false);
+
 		
 		printf("Placing files into [%s] linked by [%s]\n", directory,
 		url_base);

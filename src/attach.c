@@ -212,6 +212,9 @@ void unravel_multipart_mail(struct email_t* mail){
 
 void free_submails(struct email_t* mail){
 	
+	free(mail->file_info.name);
+	free(mail->file_info.mime_type);
+
 	if(!mail->is_multipart){
 		return;
 	}
@@ -336,6 +339,10 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		return 0;
 
 	}
+	if(mail->file_info.name == NULL){
+		return 0;
+	}
+	
 	if(mail->base64_encoded){
 		if(base64_decode_file(dirname, mail) < 0){
 			fprintf(stderr, "Failed to decode base64 file\n!");
@@ -344,7 +351,7 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 	}else{
 		if(decode_file(dirname, (mail->message+mail->body_offset),
 			 (mail->message_length - mail->body_offset), 
-			 mail->file_info) < 0){
+			 mail->file_info.name) < 0){
 			
 			fprintf(stderr, "Failed to decode base64 file\n!");
 			return -1;

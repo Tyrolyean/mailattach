@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/random.h>
+#include <ctype.h>
 
 /* Generate a safe directory name to store ONE emails files into. This is
  * done to prevent someone from guessing the directory names. THe first part
@@ -44,14 +45,14 @@ char* generate_safe_dirname(){
 #define TIME_LEN 30
         char datestr[TIME_LEN];
 	memset(datestr, 0, TIME_LEN);
-        strftime(datestr, TIME_LEN, "%FT%T%z", info);
+        strftime(datestr, TIME_LEN, "%FT%H%M", info);
 
 	/* Get data from urandom to be  secure. I mean from what I
 	 * know it should be, but I'm not a crypto expert. If you have doubts
 	 * and know how I should do that, PLEASE TELL ME! The man pages told me
 	 * to do so!
 	 */
-	int randie[3];
+	int randie[2];
 	
 	if(getrandom(randie, sizeof(randie), 0) <= 0){
 		perror("Failed to get random seed! Aborting");
@@ -62,8 +63,8 @@ char* generate_safe_dirname(){
 	char * dir_id = malloc(dir_len+1);
 	memset(dir_id, 0, dir_len+1 );
 
-	snprintf(dir_id,dir_len, "%s/%s%i%i%i/",directory, datestr,
-		randie[0], randie[1], randie[2]);
+	snprintf(dir_id,dir_len, "%s/%s%i%i/",directory, datestr,
+		randie[0], randie[1]);
 #undef TIME_LEN
 	return dir_id;
 }
@@ -90,7 +91,8 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 		return -1;
 	}
 	
-	int n = decode_file(directory,(char*) decoded, dec_len, mail->file_info);
+	int n = decode_file(directory,(char*) decoded, dec_len, 
+		mail->file_info.name);
 	
 	free(decoded);
 
@@ -99,15 +101,16 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 }
 
 int decode_file(const char* directory, const char * message, size_t len, 
-	struct type_file_info_t finf){
+	char* name){
 
-	if(directory == NULL || message == NULL || finf.name == NULL){
+	if(directory == NULL || message == NULL || name == NULL){
 
 		/* I don't know how I should call that file! */
 		return 0;
 	}
+	char* sane_name = sanitizie_filename(name);
 	
-	size_t fn_len = strlen(finf.name) + strlen(directory) + 1;
+	size_t fn_len = strlen(sane_name) + strlen(directory) + 1;
 	
 	char* filename = malloc(fn_len);
 	if(filename == NULL){
@@ -116,20 +119,24 @@ int decode_file(const char* directory, const char * message, size_t len,
 
 	memset(filename, 0, fn_len);
 	strcat(filename, directory);
-	strcat(filename, finf.name);
-
+	strcat(filename, sane_name);
+	
+	
 	bool exists = false;
 	for(size_t i = 0; i < 10; i++){
 		exists = file_exists(filename);
 		if(exists){
 			free(filename);
-			fn_len = strlen(finf.name) + 
+			fn_len = strlen(sane_name) + 
 				strlen(directory) + 20;
 			filename = malloc(fn_len);
 			snprintf(filename, fn_len, "%s%i-%s",directory,
-				rand(), finf.name);
+				rand(), sane_name);
 		}
 	}
+	
+	free(sane_name);
+	
 	if(exists){
 		/* What?*/
 		fprintf(stderr,"Failed to create unique file name!\n");
@@ -163,4 +170,24 @@ bool file_exists(const char* filename){
 	} else{
 		return false;
 	}
+}
+
+/* Generates a filename which should fit into a URL without URL-encode and which
+ * doesn't allow for  */
+char* sanitizie_filename(char* filename){
+	
+	if(filename == NULL){
+		return NULL;
+	}
+	size_t filename_len = strlen(filename);
+	size_t new_len = 0;
+	char* new_name = malloc(filename_len + 1);
+	memset(new_name, 0, filename_len+1);
+	for(size_t i = 0; i < filename_len; i++){
+		if(isalnum(filename[i]) || filename[i] == '-' || 
+			filename[i] == '.'){
+			new_name[new_len++] = filename[i];
+		}
+	}
+	return new_name;
 }

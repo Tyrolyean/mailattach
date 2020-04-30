@@ -25,9 +25,12 @@
 char* generate_safe_dirname();
 
 int base64_decode_file(const char* directory, const struct email_t* mail);
+
 int decode_file(const char* directory, const char * message, size_t len,
-	struct type_file_info_t finf);
+	char* name);
 
 bool file_exists(const char* filename);
+
+char* sanitizie_filename(char* filename);
 
 #endif /* FILE_H */
