@@ -134,11 +134,16 @@ int remove_mail(struct email_t* mail){
 		return -1;
 	}
 	size_t remove_offset =  mail->message - root->message;
+	
+	propagate_size_change(mail, -remove_len);
+	
 	remove_string(root->message, root->message_length, 
 		remove_offset, remove_len);
 	
-	propagate_size_change(mail, -remove_len);
-	propagate_insert_delete(root, mail->message+remove_offset, -remove_len);
+	propagate_insert_delete(root, root->message+remove_offset, -remove_len);
+	
+
+	free_submails(mail);
 	
 	return 0;
 
