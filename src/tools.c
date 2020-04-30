@@ -158,16 +158,37 @@ char* get_value_equals(char* content_type, size_t content_len,
 		*boundary_len = 0;
 		return NULL;
 	}
+#define STATE_INIT   0
+#define STATE_EQUALS 1
+#define STATE_ALNUM  2
+#define STATE_QUOTE  3
+
+	size_t state = STATE_INIT;
 	
 	for(size_t i = boundary_offset; i < content_len;i++){
-		if(content_type[i] == '"' && boundary_begin == NULL){
-			boundary_begin = &content_type[i+1];
-		}else  if(content_type[i] == '"'){
-			*boundary_len = &content_type[i] - boundary_begin ;
-			return boundary_begin;
+		if(state == STATE_INIT && content_type[i] == '='){
+			state = STATE_EQUALS;
+		}else if(state == STATE_EQUALS && !isspace(content_type[i])){
+			if(content_type[i] == '"' && boundary_begin == NULL){
+				boundary_begin = &content_type[++i];
+				state = STATE_QUOTE;
+			}else {
+				boundary_begin = &content_type[i];
+				state = STATE_ALNUM;
+			}
+		}else if(state == STATE_ALNUM){
+			if(isspace(content_type[i])){
+				*boundary_len = &content_type[i] - 
+					boundary_begin ;
+				return boundary_begin;
+			}
+		}else if(state == STATE_QUOTE && content_type[i] == '"'){
+				*boundary_len = &content_type[i] - 
+					boundary_begin ;
+				return boundary_begin;
+
 		}
 	}
-	
 	*boundary_len = 0;
 	return NULL;
 }
