@@ -29,7 +29,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <errno.h>
 
 /* Generates an email struct from the given eml text. If the content is
  * multipart, it will be slit up into several email_ts. This expansion is done
@@ -346,12 +345,17 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		min_filesize ){
 		return 0;
 	}
-	if(mkdir(directory, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0){
+	/* Create the directory for the file */
+	if(!(*created)){
+		*created = true;
+		fprintf(stderr, "Failed to create storage directory %s!",
+			dirname);
+		if(mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) 
+			< 0){
 
-		if(errno != EEXIST){
-			
 			perror("Failed to create storage directory!");
 			return -1;
+
 		}
 
 	}
