@@ -100,37 +100,51 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 		fprintf(stderr, "Failed to decode base64 message\n");
 		return -1;
 	}
+	
+	int n = decode_file(directory,(char*) decoded, dec_len, mail->file_info);
+	
+	free(decoded);
 
+	return n;
+	
+}
 
-	size_t fn_len = strlen(mail->file_info.name) + strlen(directory) + 1;
+int decode_file(const char* directory, const char * message, size_t len, 
+	struct type_file_info_t finf){
+
+	if(directory == NULL || message == NULL){
+
+		/* I don't know how I should call that file! */
+		return 0;
+	}
+	
+	size_t fn_len = strlen(finf.name) + strlen(directory) + 1;
 	
 	char* filename = malloc(fn_len);
 	if(filename == NULL){
-		free(decoded);
 		return -1;
 	}
 
 	memset(filename, 0, fn_len);
 	strcat(filename, directory);
-	strcat(filename, mail->file_info.name);
+	strcat(filename, finf.name);
 
 	bool exists = false;
 	for(size_t i = 0; i < 10; i++){
 		exists = file_exists(filename);
 		if(exists){
 			free(filename);
-			fn_len = strlen(mail->file_info.name) + 
+			fn_len = strlen(finf.name) + 
 				strlen(directory) + 20;
 			filename = malloc(fn_len);
 			snprintf(filename, fn_len, "%s%i-%s",directory,
-				rand(), mail->file_info.name);
+				rand(), finf.name);
 		}
 	}
 	if(exists){
 		/* What?*/
 		fprintf(stderr,"Failed to create unique file name!\n");
 		free(filename);
-		free(decoded);
 		return -1;
 	}
 
@@ -138,18 +152,16 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 	if(outfile == NULL){
 		perror("Failed to open base64 out file");
 		free(filename);
-		free(decoded);
 		return -1;
 	}
 	if(verbose){
-		printf("Storing base64 file len %lu to [%s]\n",
-			dec_len, filename);
+		printf("Storing file len %lu to [%s]\n",
+			len, filename);
 	}
 
-	fwrite(decoded, dec_len, 1, outfile);
+	fwrite(message, len, 1, outfile);
 	fclose(outfile);
 	free(filename);
-	free(decoded);
 	return 0;
 	
 }

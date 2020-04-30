@@ -336,14 +336,22 @@ int replace_base64_files(struct email_t* mail, const char* dirname){
 		return 0;
 
 	}
-	if(!mail->base64_encoded){
-		return 0;
+	if(mail->base64_encoded){
+		if(base64_decode_file(dirname, mail) < 0){
+			fprintf(stderr, "Failed to decode base64 file\n!");
+			return -1;
+		}
+	}else{
+		if(decode_file(dirname, (mail->message+mail->body_offset),
+			 (mail->message_length - mail->body_offset), 
+			 mail->file_info) < 0){
+			
+			fprintf(stderr, "Failed to decode base64 file\n!");
+			return -1;
+		}
+
 	}
 	
-	if(base64_decode_file(dirname, mail) < 0){
-		fprintf(stderr, "Failed to decode base64 file\n!");
-		return -1;
-	}
 	/* Replace the mail message with some html text TODO */
 
 	return 0;
