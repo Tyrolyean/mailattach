@@ -49,6 +49,7 @@ struct email_t* mail_from_text(char* message, size_t length,
 	mail->ct_len = 0;
 	mail->content_type = 0;
 	mail->parent = parent_mail;
+	mail->saved_filename = NULL;
 	
 	redetect_body_head(mail);
 	char* cont_type = search_header_key(mail, "Content-Type");
@@ -357,15 +358,16 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		}
 
 	}
+	char* chosen_filename = NULL;
 	if(mail->base64_encoded){
-		if(base64_decode_file(dirname, mail) < 0){
+		if(base64_decode_file(dirname, mail, &chosen_filename) < 0){
 			fprintf(stderr, "Failed to decode base64 file\n!");
 			return -1;
 		}
 	}else{
 		if(decode_file(dirname, (mail->message+mail->body_offset),
 			 (mail->message_length - mail->body_offset), 
-			 mail->file_info.name) < 0){
+			 mail->file_info.name, &chosen_filename) < 0){
 			
 			fprintf(stderr, "Failed to decode base64 file\n!");
 			return -1;
@@ -377,12 +379,57 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	/* Delete old attachment */
 	if(mail->parent != NULL){
 		if(remove_mail(mail) < 0){
-			fprintf(stderr, "Failed to remove old attachment!!\n");
+			fprintf(stderr, "Failed to remove old attachment!\n");
+			free(chosen_filename);
 			return -1;
 		}
 	}
+	static const char* html_filler_pref = 
+	"<br><a>MAIL ATTACHED</a> The following attachment of this mail has "
+	"been remotely stored: <br>\r\n"
+	"<p> File %s of Type %s as <a href=\"%s/%s\">%s/%s</a></p>\r\n";
 	
+	static const char* text_filler_pref = 
+	" --- MAIL ATTACHED ---\r\n The following attachment of this mail has "
+	"been remotely stored:\r\n"
+	"File %s of Type %s as %s/%s\r\n";
+	
+	size_t directory_len = strlen(dirname);
+	size_t url_len = strlen(url_base);
+	size_t mime_len = 0;
+	if(mail->file_info.mime_type != NULL){
+		mime_len = strlen(mail->file_info.mime_type);
+	}
 
+	size_t html_buffer_len = strlen(html_filler_pref) + 2*url_len + 50 +
+		mime_len + 2*strlen(mail->file_info.name);
+	
+	size_t text_buffer_len = strlen(html_filler_pref) + url_len + 50 +
+		mime_len + strlen(mail->file_info.name);
+
+	char* html_buffer = malloc(html_buffer_len);
+	memset(html_buffer, 0, html_buffer_len);
+	
+	char* text_buffer = malloc(text_buffer_len);
+	memset(text_buffer, 0, text_buffer_len);
+	
+	snprintf(html_buffer, html_buffer_len - 1, html_filler_pref,  
+		mail->file_info.name,
+		mail->file_info.mime_type, 
+		url_base, chosen_filename+directory_len,
+		url_base, chosen_filename+directory_len);
+	
+	snprintf(text_buffer, text_buffer_len - 1, text_filler_pref,  
+		mail->file_info.name,
+		mail->file_info.mime_type, 
+		url_base, chosen_filename+directory_len);
+	
+	printf(html_buffer);
+	printf(text_buffer);
+	
+	free(html_buffer);
+	free(text_buffer);
+	free(chosen_filename);
 	free_submails(mail);
 	free(mail);
 	return 0;

@@ -64,6 +64,7 @@ struct email_t{
 	struct email_t* parent;
 	bool base64_encoded;
 	struct type_file_info_t file_info;
+	char* saved_filename;
 };
 
 

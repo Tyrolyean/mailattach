@@ -69,7 +69,8 @@ char* generate_safe_dirname(){
 	return dir_id;
 }
 
-int base64_decode_file(const char* directory, const struct email_t* mail){
+int base64_decode_file(const char* directory, const struct email_t* mail,
+	char** dest_filename){
 	
 	if(!mail->base64_encoded){
 		return -1;
@@ -92,7 +93,7 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 	}
 	
 	int n = decode_file(directory,(char*) decoded, dec_len, 
-		mail->file_info.name);
+		mail->file_info.name, dest_filename);
 	
 	free(decoded);
 
@@ -101,7 +102,7 @@ int base64_decode_file(const char* directory, const struct email_t* mail){
 }
 
 int decode_file(const char* directory, const char * message, size_t len, 
-	char* name){
+	char* name, char** dest_filename){
 
 	if(directory == NULL || message == NULL || name == NULL){
 
@@ -157,7 +158,7 @@ int decode_file(const char* directory, const char * message, size_t len,
 
 	fwrite(message, len, 1, outfile);
 	fclose(outfile);
-	free(filename);
+	*dest_filename = filename;
 	return 0;
 	
 }

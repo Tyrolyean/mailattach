@@ -38,6 +38,7 @@ You can specify the following command line options:
 	Ah and please, please, pretty please disable directory indexing on your
 	webserver! 
 	That WILL BE a security riks!
+	Please don't specify a / at the end, and have the URL encoded!
 
 --other-base64 --only-base64
 	Decides wether ONLY base64 encoded files should be removed from the
