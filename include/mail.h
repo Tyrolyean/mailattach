@@ -72,6 +72,7 @@ struct email_t{
 int append_header(struct email_t* mail, const char* key, const char* value);
 int append_to_header(struct email_t* mail, const char* pair);
 int append_to_body(struct email_t* mail, const char* text);
+int append_to_html_body(struct email_t* mail, const char* text);
 int remove_mail(struct email_t* mail);
 
 struct email_t* get_root_mail(struct email_t* mail);

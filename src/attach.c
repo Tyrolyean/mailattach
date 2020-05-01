@@ -475,7 +475,7 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		 append_to_body(txt_app, text_buffer);
 	}
 	if(html_app != NULL){
-		 append_to_body(html_app, html_buffer);
+		 append_to_html_body(html_app, html_buffer);
 		
 	}
 	
