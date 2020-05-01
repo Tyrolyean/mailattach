@@ -199,7 +199,7 @@ void unravel_multipart_mail(struct email_t* mail){
 			continue;
 		}
 		struct email_t *submail = mail_from_text((char*)begin_pointer, 
-			end_pointer - begin_pointer + 1, mail);
+			end_pointer - begin_pointer, mail);
 		mail->submes = realloc(mail->submes, ++mail->submes_cnt * 
 			(sizeof(struct email_t)));
 		mail->submes[mail->submes_cnt - 1] = submail;
@@ -364,10 +364,13 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	if(mail->is_multipart){
 	
 		for(size_t i = 0; i < mail->submes_cnt; i++){
-			if(replace_files(mail->submes[i], dirname, created) 
-				< 0){
+			int n = replace_files(mail->submes[i], dirname, 
+				created) ;
+			if(n < 0){
 
 				return -1;
+			} else if(n == 1){
+				i--;
 			}
 		}
 		return 0;
@@ -481,6 +484,6 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	free(chosen_filename);
 	free_submails(mail);
 	free(mail);
-	return 0;
+	return 1;
 }
 
