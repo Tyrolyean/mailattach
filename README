@@ -62,6 +62,7 @@ postfix website.
 This program needs to be started via it's own systemd service on system boot.
 You need to add the in and oputput ports to your postfix queue as described in
 the link above. For example, a setup with the default values looks like this:
+
 |-------|    SMTP    |-----------|  SMTP    |-------|
 |POSTFIX|     -->    | MAILATTACH|   -->    |POSTFIX|
 |-------|  n    4269 |-----------| n   4270 |-------|
@@ -71,6 +72,61 @@ the link above. For example, a setup with the default values looks like this:
 		     |-----------|
                      |Attachments|
 		     |-----------|
+
+POSTFIX CONFIGURATION
+
+The following is an example postfix configuration which I deploy with opendkim
+and spamassassin as well as mailattach itself:
+
+master.cf:
+
+smtp      inet  n       -       n       -       -       smtpd
+	-o content_filter=scan:localhost:4269
+	-o receive_override_options=no_address_mappings,no_milters
+smtps     inet  n       -       n       -       -       smtpd
+	-o content_filter=scan:localhost:4269
+	-o receive_override_options=no_address_mappings,no_milters
+... Rest of config file
+scan      unix  -       -       n       -       10      smtp
+        -o smtp_send_xforward_command=yes
+        -o disable_mime_output_conversion=yes
+	-o smtp_tls_security_level=none
+localhost:4270 inet  n       -       n       -       10      smtpd
+            -o content_filter=spamassassin
+            -o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters
+            -o smtpd_helo_restrictions=
+            -o smtpd_client_restrictions=
+            -o smtpd_sender_restrictions=
+            # Postfix 2.10 and later: specify empty smtpd_relay_restrictions.
+            -o smtpd_relay_restrictions=
+            -o smtpd_recipient_restrictions=permit_mynetworks,reject
+            -o mynetworks=127.0.0.0/8
+            -o smtpd_authorized_xforward_hosts=127.0.0.0/8
+	    -o smtp_tls_security_level=none
+spamassassin unix -     n       n       -       -       pipe
+  flags=R user=spamd argv=/usr/bin/vendor_perl/spamc -e /usr/bin/sendmail -oi -f ${sender} ${recipient}
+
+
+Of course your configuration may vary, but I will try to explain some parts
+which are important:
+
+- In the first two smtp/smtps commands the no_milters option has been specified.
+  This was done to avoid dkim signing of the incoming email before it's
+  attachments have been removed. The same goes for the localhost:4270 service.
+
+- The no_address_mappings options have been specified because "This is 
+  typically specified BEFORE an external content filter. ". It disables address
+  macro expansion.
+
+- The smtp_tls_security_level=none options in the scan and localhost:4720
+  services prevent postfix from starting a TLS connection via the STARTTLS
+  command. Note that this is ONLY INTERNALLY. It will receive external
+  STARTTLS connections.
+
+The remaining configuration options have been more or less taken from the
+postfix manual and are explained in more depth there:
+
+http://www.postfix.org/FILTER_README.html
 
 DIRECTORY CLEANING
 
