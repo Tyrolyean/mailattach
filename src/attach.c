@@ -407,7 +407,7 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	char* chosen_filename = NULL;
 	if(mail->base64_encoded){
 		if(base64_decode_file(dirname, mail, &chosen_filename) < 0){
-			fprintf(stderr, "Failed to decode base64 file\n!");
+			fprintf(stderr, "Failed to decode base64 file!\n");
 			return -1;
 		}
 	}else{
@@ -415,7 +415,7 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 			 (mail->message_length - mail->body_offset), 
 			 mail->file_info.name, &chosen_filename) < 0){
 			
-			fprintf(stderr, "Failed to decode base64 file\n!");
+			fprintf(stderr, "Failed to decode regular file!\n");
 			return -1;
 		}
 
