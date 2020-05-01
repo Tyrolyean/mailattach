@@ -15,11 +15,13 @@
  * under the License.
  */
 
+#define _GNU_SOURCE
+#include <string.h>
+
 #include "mail.h"
 #include "tools.h"
 #include "attach.h"
 
-#include <string.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -108,6 +110,63 @@ int append_to_body(struct email_t* mail, const char* text){
 	struct email_t* root = get_root_mail(mail);
 	size_t root_offset = mail->message_length + 
 		(mail->message - root->message);
+
+	char* old_root = root->message;
+	char * new_root = insert_string(root->message, buffer, 
+		root->message_length, root_offset);
+	if(new_root == NULL){
+		return -1;
+	}	
+	propagate_size_change(mail, strlen(buffer));	
+
+	propagate_root_pointer(root, new_root, old_root);
+	propagate_insert_delete(root, root->message+root_offset, 
+		strlen(buffer));
+	
+	free(buffer);
+	redetect_body_head(mail);
+
+	return 0;
+
+}
+
+/* Append the string text DIRECTLY before the last closing </html> tag inside
+ * the body.
+ */
+int append_to_html_body(struct email_t* mail, const char* text){
+
+	if(text == NULL || mail == NULL){
+		return -1;
+	}
+
+	char *buffer = malloc(strlen(text) + 3);
+	memset(buffer, 0, strlen(text) + 3);
+	buffer[0] = '\r';
+	buffer[1] = '\n';
+	strcat(buffer, text);
+	struct email_t* root = get_root_mail(mail);
+	
+	char* body_end = mail->message_length + 
+		mail->message;
+	char* html_end = mail->message;
+	for(;;){
+		
+		char * html_end_int = strcasestr(html_end+1, "</html>");
+		if(html_end_int == NULL || html_end_int >= body_end){
+			break;
+		}else{
+			html_end = html_end_int;
+		}
+	}
+	size_t root_offset = 0;
+	if(html_end == mail->message){
+		root_offset = mail->message_length +
+			(mail->message - root->message);
+		
+	}else{
+		root_offset = html_end - root->message;
+
+	}
 
 	char* old_root = root->message;
 	char * new_root = insert_string(root->message, buffer, 
