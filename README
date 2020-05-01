@@ -21,10 +21,12 @@ You can specify the following command line options:
 	detected or not. If true, the mail will not be modified.
 
 --in-port -i
-	The incoming smtp port/the port from which mail is received.
+	The incoming smtp port/the port from which mail is received. Defaults to
+	4269.
 
 --out-port -o
 	The outgoing smtp port/the port to which mail ist passed through.
+	Defaults 4270
 
 --directory -d
 	The directory inside of which the attachments will be stored in. Please
@@ -59,4 +61,26 @@ postfix website.
 
 This program needs to be started via it's own systemd service on system boot.
 You need to add the in and oputput ports to your postfix queue as described in
-the link above. More documentation is to a TODO
+the link above. For example, a setup with the default values looks like this:
+|-------|    SMTP    |-----------|  SMTP    |-------|
+|POSTFIX|     -->    | MAILATTACH|   -->    |POSTFIX|
+|-------|  n    4269 |-----------| n   4270 |-------|
+                         |
+                         |
+                         v
+		     |-----------|
+                     |Attachments|
+		     |-----------|
+
+DIRECTORY CLEANING
+
+If you want to regularly purge old files from the directory, you can start the
+shell script clean.sh in this repository via a chron job. It will by default
+remove all files older than 10 days. If you want to write your own shell script
+or let something else do the job for you, the directories where files are stored
+are structured like this:
+2020-01-01T1430-3893482323323
+^DATE     ^TIME^RANDOM NUMBER
+
+The random number at the end consists of several signed integers, therefore it
+sometimes has one or more - in it.
