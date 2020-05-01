@@ -431,7 +431,7 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 		}
 	}
 	static const char* html_filler_pref = 
-	"<br><a>MAIL ATTACHED</a> The following attachment of this mail has "
+	"<br><h1>MAIL ATTACHED</h1> The following attachment of this mail has "
 	"been remotely stored: <br>\r\n"
 	"<p> File %s of Type %s as <a href=\"%s%s\">%s%s</a></p>\r\n";
 	
