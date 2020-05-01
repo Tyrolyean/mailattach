@@ -433,12 +433,12 @@ int replace_files(struct email_t* mail, const char* dirname, bool* created){
 	static const char* html_filler_pref = 
 	"<br><h1>MAIL ATTACHED</h1> The following attachment of this mail has "
 	"been remotely stored: <br>\r\n"
-	"<p> File %s of Type %s as <a href=\"%s%s\">%s%s</a></p>\r\n";
+	"<p> File \"%s of type \"%s\" as <a href=\"%s%s\">%s%s</a></p>\r\n";
 	
 	static const char* text_filler_pref = 
 	" --- MAIL ATTACHED ---\r\n The following attachment of this mail has "
 	"been remotely stored:\r\n"
-	"File %s of Type %s as %s%s\r\n";
+	"File \"%s\" of type \"%s\" as %s%s\r\n";
 	
 	size_t directory_len = strlen(directory);
 	size_t url_len = strlen(url_base);
