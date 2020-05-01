@@ -199,7 +199,7 @@ void unravel_multipart_mail(struct email_t* mail){
 			continue;
 		}
 		struct email_t *submail = mail_from_text((char*)begin_pointer, 
-			end_pointer - begin_pointer, mail);
+			end_pointer - begin_pointer + 1, mail);
 		mail->submes = realloc(mail->submes, ++mail->submes_cnt * 
 			(sizeof(struct email_t)));
 		mail->submes[mail->submes_cnt - 1] = submail;
