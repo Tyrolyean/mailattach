@@ -217,10 +217,10 @@ const char* get_prev_line(const char* message, size_t len_neg){
 	for(size_t i = 0; i < (len_neg-2); i++){
 		if(message[-i] == '\n'){
 			if(message[-(i+1)] == '\r'){
-				return message-(i+2);
+				return message-(i+1);
 
 			}else{
-				return message-(i+1);
+				return message-(i);
 
 			}
 		}
