@@ -53,7 +53,7 @@ You can specify the following command line options:
 	500Kb. If 0 is specified, all files will be attached. A negative value
 	effectively disables us.
 
-HOWTO
+##### HOWTO
 
 We essentially are MITM sniffing your email traffic and playing proxy from your
 postfix to your postfix. That's how this is intended to work according to the
@@ -73,7 +73,7 @@ the link above. For example, a setup with the default values looks like this:
                      |Attachments|
 		     |-----------|
 
-POSTFIX CONFIGURATION
+#### POSTFIX CONFIGURATION
 
 The following is an example postfix configuration which I deploy with opendkim
 and spamassassin as well as mailattach itself:
@@ -128,7 +128,7 @@ postfix manual and are explained in more depth there:
 
 http://www.postfix.org/FILTER_README.html
 
-DIRECTORY CLEANING
+#### DIRECTORY CLEANING
 
 If you want to regularly purge old files from the directory, you can start the
 shell script clean.sh in this repository via a chron job. It will by default
@@ -140,3 +140,9 @@ are structured like this:
 
 The random number at the end consists of several signed integers, therefore it
 sometimes has one or more - in it.
+
+#### Building
+
+To build the plugin simply run make. The resulting binary will spawn in 
+bin/mailattach. Copy it to the desired location. It doesn't link against any
+external librarys. Well  maybe that isn't true, it requires the glibc.
